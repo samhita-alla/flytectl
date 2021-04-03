@@ -2,15 +2,15 @@ package get
 
 import (
 	"context"
-
-	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
-	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
-	"github.com/flyteorg/flytestdlib/logger"
-	"github.com/golang/protobuf/proto"
+	auth "github.com/flyteorg/flytectl/pkg/auth"
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
 	"github.com/flyteorg/flytectl/pkg/printer"
+	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
+	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
+	"github.com/flyteorg/flytestdlib/logger"
+	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -70,25 +70,27 @@ func getExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.Command
 	var executions []*admin.Execution
 	if len(args) > 0 {
 		name := args[0]
-		execution, err := cmdCtx.AdminClient().GetExecution(ctx, &admin.WorkflowExecutionGetRequest{
+		execution, err := auth.OauthGetExecutionCallDecorator(cmdCtx.AdminClient().GetExecution)(
+			ctx, &admin.WorkflowExecutionGetRequest{
 			Id: &core.WorkflowExecutionIdentifier{
 				Project: config.GetConfig().Project,
 				Domain:  config.GetConfig().Domain,
 				Name:    name,
 			},
-		})
+			})
 		if err != nil {
 			return err
 		}
 		executions = append(executions, execution)
 	} else {
-		executionList, err := cmdCtx.AdminClient().ListExecutions(ctx, &admin.ResourceListRequest{
-			Limit: 100,
-			Id: &admin.NamedEntityIdentifier{
-				Project: config.GetConfig().Project,
-				Domain:  config.GetConfig().Domain,
-			},
-		})
+		executionList, err := auth.OauthListExecutionCallDecorator(cmdCtx.AdminClient().ListExecutions) (
+			ctx, &admin.ResourceListRequest{
+				Limit: 100,
+				Id: &admin.NamedEntityIdentifier{
+					Project: config.GetConfig().Project,
+					Domain:  config.GetConfig().Domain,
+				},
+			})
 		if err != nil {
 			return err
 		}
