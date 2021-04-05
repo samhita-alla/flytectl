@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/flyteorg/flytectl/pkg/auth"
+	"google.golang.org/grpc"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -76,43 +78,58 @@ func register(ctx context.Context, message proto.Message, cmdCtx cmdCore.Command
 	switch v := message.(type) {
 	case *admin.LaunchPlan:
 		launchPlan := message.(*admin.LaunchPlan)
-		_, err := cmdCtx.AdminClient().CreateLaunchPlan(ctx, &admin.LaunchPlanCreateRequest{
-			Id: &core.Identifier{
-				ResourceType: core.ResourceType_LAUNCH_PLAN,
-				Project:      config.GetConfig().Project,
-				Domain:       config.GetConfig().Domain,
-				Name:         launchPlan.Id.Name,
-				Version:      filesConfig.Version,
-			},
-			Spec: launchPlan.Spec,
-		})
-		return err
+		var callOptions []grpc.CallOption
+		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+			var err error
+			_, err = cmdCtx.AdminClient().CreateLaunchPlan(_ctx, &admin.LaunchPlanCreateRequest{
+				Id: &core.Identifier{
+					ResourceType: core.ResourceType_LAUNCH_PLAN,
+					Project:      config.GetConfig().Project,
+					Domain:       config.GetConfig().Domain,
+					Name:         launchPlan.Id.Name,
+					Version:      filesConfig.Version,
+				},
+				Spec: launchPlan.Spec,
+			}, _callOptions...)
+			return err
+		}
+		return auth.Do(grpcApiCall, ctx, callOptions, true)
 	case *admin.WorkflowSpec:
 		workflowSpec := message.(*admin.WorkflowSpec)
-		_, err := cmdCtx.AdminClient().CreateWorkflow(ctx, &admin.WorkflowCreateRequest{
-			Id: &core.Identifier{
-				ResourceType: core.ResourceType_WORKFLOW,
-				Project:      config.GetConfig().Project,
-				Domain:       config.GetConfig().Domain,
-				Name:         workflowSpec.Template.Id.Name,
-				Version:      filesConfig.Version,
-			},
-			Spec: workflowSpec,
-		})
-		return err
+		var callOptions []grpc.CallOption
+		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+			var err error
+			_, err = cmdCtx.AdminClient().CreateWorkflow(_ctx, &admin.WorkflowCreateRequest{
+				Id: &core.Identifier{
+					ResourceType: core.ResourceType_WORKFLOW,
+					Project:      config.GetConfig().Project,
+					Domain:       config.GetConfig().Domain,
+					Name:         workflowSpec.Template.Id.Name,
+					Version:      filesConfig.Version,
+				},
+				Spec: workflowSpec,
+			}, _callOptions...)
+			return err
+		}
+		return auth.Do(grpcApiCall, ctx, callOptions, true)
 	case *admin.TaskSpec:
 		taskSpec := message.(*admin.TaskSpec)
-		_, err := cmdCtx.AdminClient().CreateTask(ctx, &admin.TaskCreateRequest{
-			Id: &core.Identifier{
-				ResourceType: core.ResourceType_TASK,
-				Project:      config.GetConfig().Project,
-				Domain:       config.GetConfig().Domain,
-				Name:         taskSpec.Template.Id.Name,
-				Version:      filesConfig.Version,
-			},
-			Spec: taskSpec,
-		})
-		return err
+		var callOptions []grpc.CallOption
+		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+			var err error
+			_, err = cmdCtx.AdminClient().CreateTask(ctx, &admin.TaskCreateRequest{
+				Id: &core.Identifier{
+					ResourceType: core.ResourceType_TASK,
+					Project:      config.GetConfig().Project,
+					Domain:       config.GetConfig().Domain,
+					Name:         taskSpec.Template.Id.Name,
+					Version:      filesConfig.Version,
+				},
+				Spec: taskSpec,
+			}, _callOptions...)
+			return err
+		}
+		return auth.Do(grpcApiCall, ctx, callOptions, true)
 	default:
 		return fmt.Errorf("Failed registering unknown entity  %v", v)
 	}

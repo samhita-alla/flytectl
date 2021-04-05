@@ -3,6 +3,8 @@ package get
 import (
 	"context"
 	"fmt"
+	"github.com/flyteorg/flytectl/pkg/auth"
+	"google.golang.org/grpc"
 
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
@@ -42,18 +44,28 @@ func FetchTaskForName(ctx context.Context, name string, project string, domain s
 }
 
 func FetchAllVerOfTask(ctx context.Context, name string, project string, domain string, cmdCtx cmdCore.CommandContext) ([]*admin.Task, error) {
-	tList, err := cmdCtx.AdminClient().ListTasks(ctx, &admin.ResourceListRequest{
-		Id: &admin.NamedEntityIdentifier{
-			Project: project,
-			Domain:  domain,
-			Name:    name,
-		},
-		SortBy: &admin.Sort{
-			Key:       "created_at",
-			Direction: admin.Sort_DESCENDING,
-		},
-		Limit: 100,
-	})
+	var callOptions []grpc.CallOption
+	var tList *admin.TaskList
+	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		var err error
+		tList, err = cmdCtx.AdminClient().ListTasks(_ctx, &admin.ResourceListRequest{
+			Id: &admin.NamedEntityIdentifier{
+				Project: project,
+				Domain:  domain,
+				Name:    name,
+			},
+			SortBy: &admin.Sort{
+				Key:       "created_at",
+				Direction: admin.Sort_DESCENDING,
+			},
+			Limit: 100,
+		}, callOptions...)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	err := auth.Do(grpcApiCall, ctx, callOptions, true)
 	if err != nil {
 		return nil, err
 	}
@@ -77,15 +89,25 @@ func FetchTaskLatestVersion(ctx context.Context, name string, project string, do
 }
 
 func FetchTaskVersion(ctx context.Context, name string, version string, project string, domain string, cmdCtx cmdCore.CommandContext) (*admin.Task, error) {
-	t, err := cmdCtx.AdminClient().GetTask(ctx, &admin.ObjectGetRequest{
-		Id: &core.Identifier{
-			ResourceType: core.ResourceType_TASK,
-			Project:      project,
-			Domain:       domain,
-			Name:         name,
-			Version:      version,
-		},
-	})
+	var callOptions []grpc.CallOption
+	var t *admin.Task
+	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		var err error
+		t, err = cmdCtx.AdminClient().GetTask(_ctx, &admin.ObjectGetRequest{
+			Id: &core.Identifier{
+				ResourceType: core.ResourceType_TASK,
+				Project:      project,
+				Domain:       domain,
+				Name:         name,
+				Version:      version,
+			},
+		}, _callOptions...)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	err := auth.Do(grpcApiCall, ctx, callOptions, true)
 	if err != nil {
 		return nil, err
 	}

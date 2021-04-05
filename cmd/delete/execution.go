@@ -2,6 +2,8 @@ package delete
 
 import (
 	"context"
+	"github.com/flyteorg/flytectl/pkg/auth"
+	"google.golang.org/grpc"
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
@@ -64,13 +66,19 @@ func terminateExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.C
 	for i := 0; i < len(args); i++ {
 		name := args[i]
 		logger.Infof(ctx, "Terminating execution of %v execution ", name)
-		_, err := cmdCtx.AdminClient().TerminateExecution(ctx, &admin.ExecutionTerminateRequest{
-			Id: &core.WorkflowExecutionIdentifier{
-				Project: config.GetConfig().Project,
-				Domain:  config.GetConfig().Domain,
-				Name:    name,
-			},
-		})
+		var callOptions []grpc.CallOption
+		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+			var err error
+			_, err = cmdCtx.AdminClient().TerminateExecution(_ctx, &admin.ExecutionTerminateRequest{
+				Id: &core.WorkflowExecutionIdentifier{
+					Project: config.GetConfig().Project,
+					Domain:  config.GetConfig().Domain,
+					Name:    name,
+				},
+			}, _callOptions...)
+			return err
+		}
+		err := auth.Do(grpcApiCall, ctx, callOptions, true)
 		if err != nil {
 			logger.Errorf(ctx, "Failed in terminating execution of %v execution due to %v ", name, err)
 			return err

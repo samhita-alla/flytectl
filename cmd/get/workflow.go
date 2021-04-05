@@ -2,6 +2,8 @@ package get
 
 import (
 	"context"
+	"github.com/flyteorg/flytectl/pkg/auth"
+	"google.golang.org/grpc"
 
 	"github.com/flyteorg/flytestdlib/logger"
 	"github.com/golang/protobuf/proto"
@@ -66,24 +68,33 @@ func WorkflowToProtoMessages(l []*admin.Workflow) []proto.Message {
 func getWorkflowFunc(ctx context.Context, args []string, cmdCtx cmdCore.CommandContext) error {
 	adminPrinter := printer.Printer{}
 	if len(args) > 0 {
-		workflows, err := cmdCtx.AdminClient().ListWorkflows(ctx, &admin.ResourceListRequest{
-			Id: &admin.NamedEntityIdentifier{
-				Project: config.GetConfig().Project,
-				Domain:  config.GetConfig().Domain,
-				Name:    args[0],
-			},
-			// TODO Sorting and limits should be parameters
-			SortBy: &admin.Sort{
-				Key:       "created_at",
-				Direction: admin.Sort_DESCENDING,
-			},
-			Limit: 100,
-		})
+		var callOptions []grpc.CallOption
+		var workflows *admin.WorkflowList
+		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+			var err error
+			workflows, err = cmdCtx.AdminClient().ListWorkflows(_ctx, &admin.ResourceListRequest{
+				Id: &admin.NamedEntityIdentifier{
+					Project: config.GetConfig().Project,
+					Domain:  config.GetConfig().Domain,
+					Name:    args[0],
+				},
+				// TODO Sorting and limits should be parameters
+				SortBy: &admin.Sort{
+					Key:       "created_at",
+					Direction: admin.Sort_DESCENDING,
+				},
+				Limit: 100,
+			}, _callOptions...)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		err := auth.Do(grpcApiCall, ctx, callOptions, true)
 		if err != nil {
 			return err
 		}
 		logger.Debugf(ctx, "Retrieved %v workflows", len(workflows.Workflows))
-
 		return adminPrinter.Print(config.GetConfig().MustOutputFormat(), workflowColumns, WorkflowToProtoMessages(workflows.Workflows)...)
 	}
 

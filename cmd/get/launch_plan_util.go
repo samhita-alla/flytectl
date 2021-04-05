@@ -3,6 +3,8 @@ package get
 import (
 	"context"
 	"fmt"
+	"github.com/flyteorg/flytectl/pkg/auth"
+	"google.golang.org/grpc"
 
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
@@ -42,18 +44,26 @@ func FetchLPForName(ctx context.Context, name string, project string, domain str
 }
 
 func FetchAllVerOfLP(ctx context.Context, lpName string, project string, domain string, cmdCtx cmdCore.CommandContext) ([]*admin.LaunchPlan, error) {
-	tList, err := cmdCtx.AdminClient().ListLaunchPlans(ctx, &admin.ResourceListRequest{
-		Id: &admin.NamedEntityIdentifier{
-			Project: project,
-			Domain:  domain,
-			Name:    lpName,
-		},
-		SortBy: &admin.Sort{
-			Key:       "created_at",
-			Direction: admin.Sort_DESCENDING,
-		},
-		Limit: 100,
-	})
+
+	var tList *admin.LaunchPlanList
+	var callOptions []grpc.CallOption
+	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		var err error
+		tList, err = cmdCtx.AdminClient().ListLaunchPlans(_ctx, &admin.ResourceListRequest{
+			Id: &admin.NamedEntityIdentifier{
+				Project: project,
+				Domain:  domain,
+				Name:    lpName,
+			},
+			SortBy: &admin.Sort{
+				Key:       "created_at",
+				Direction: admin.Sort_DESCENDING,
+			},
+			Limit: 100,
+		}, _callOptions...)
+		return err
+	}
+	err := auth.Do(grpcApiCall, ctx, callOptions, true)
 	if err != nil {
 		return nil, err
 	}
@@ -74,15 +84,23 @@ func FetchLPLatestVersion(ctx context.Context, name string, project string, doma
 }
 
 func FetchLPVersion(ctx context.Context, name string, version string, project string, domain string, cmdCtx cmdCore.CommandContext) (*admin.LaunchPlan, error) {
-	lp, err := cmdCtx.AdminClient().GetLaunchPlan(ctx, &admin.ObjectGetRequest{
-		Id: &core.Identifier{
-			ResourceType: core.ResourceType_LAUNCH_PLAN,
-			Project:      project,
-			Domain:       domain,
-			Name:         name,
-			Version:      version,
-		},
-	})
+
+	var callOptions []grpc.CallOption
+	var lp *admin.LaunchPlan
+	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		var err error
+		lp, err = cmdCtx.AdminClient().GetLaunchPlan(_ctx, &admin.ObjectGetRequest{
+			Id: &core.Identifier{
+				ResourceType: core.ResourceType_LAUNCH_PLAN,
+				Project:      project,
+				Domain:       domain,
+				Name:         name,
+				Version:      version,
+			},
+		}, _callOptions...)
+		return err
+	}
+	err := auth.Do(grpcApiCall, ctx, callOptions, true)
 	if err != nil {
 		return nil, err
 	}
