@@ -3,6 +3,7 @@ package get
 import (
 	"context"
 	auth "github.com/flyteorg/flytectl/pkg/auth"
+	"google.golang.org/grpc"
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
@@ -68,29 +69,48 @@ func ExecutionToProtoMessages(l []*admin.Execution) []proto.Message {
 func getExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.CommandContext) error {
 	adminPrinter := printer.Printer{}
 	var executions []*admin.Execution
+	var callOptions []grpc.CallOption
 	if len(args) > 0 {
 		name := args[0]
-		execution, err := auth.OauthGetExecutionCallDecorator(cmdCtx.AdminClient().GetExecution)(
-			ctx, &admin.WorkflowExecutionGetRequest{
-			Id: &core.WorkflowExecutionIdentifier{
-				Project: config.GetConfig().Project,
-				Domain:  config.GetConfig().Domain,
-				Name:    name,
-			},
-			})
+		var execution *admin.Execution
+		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+			var err error
+			execution, err = cmdCtx.AdminClient().GetExecution(
+				_ctx, &admin.WorkflowExecutionGetRequest{
+				Id: &core.WorkflowExecutionIdentifier{
+					Project: config.GetConfig().Project,
+					Domain:  config.GetConfig().Domain,
+					Name:    name,
+				},
+			}, _callOptions...)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		err := auth.Do(grpcApiCall, ctx, callOptions, true)
 		if err != nil {
 			return err
 		}
 		executions = append(executions, execution)
 	} else {
-		executionList, err := auth.OauthListExecutionCallDecorator(cmdCtx.AdminClient().ListExecutions) (
-			ctx, &admin.ResourceListRequest{
-				Limit: 100,
-				Id: &admin.NamedEntityIdentifier{
-					Project: config.GetConfig().Project,
-					Domain:  config.GetConfig().Domain,
-				},
-			})
+		var executionList *admin.ExecutionList
+		grpcApiCallListExecs := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+			var err error
+			executionList, err = cmdCtx.AdminClient().ListExecutions(
+				_ctx, &admin.ResourceListRequest{
+					Limit: 100,
+					Id: &admin.NamedEntityIdentifier{
+						Project: config.GetConfig().Project,
+						Domain:  config.GetConfig().Domain,
+					},
+				}, _callOptions...)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		err := auth.Do(grpcApiCallListExecs, ctx, callOptions, true)
 		if err != nil {
 			return err
 		}

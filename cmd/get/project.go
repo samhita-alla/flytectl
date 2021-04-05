@@ -2,6 +2,8 @@ package get
 
 import (
 	"context"
+	"github.com/flyteorg/flytectl/pkg/auth"
+	"google.golang.org/grpc"
 
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
 	"github.com/flyteorg/flytestdlib/logger"
@@ -63,15 +65,22 @@ func ProjectToProtoMessages(l []*admin.Project) []proto.Message {
 
 func getProjectsFunc(ctx context.Context, args []string, cmdCtx cmdCore.CommandContext) error {
 	adminPrinter := printer.Printer{}
-	projects, err := cmdCtx.AdminClient().ListProjects(ctx, &admin.ProjectListRequest{})
-	if err != nil {
+	var projects *admin.Projects
+	var callOptions []grpc.CallOption
+	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		var err error
+		projects, err = cmdCtx.AdminClient().ListProjects(ctx, &admin.ProjectListRequest{}, _callOptions...)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	// useAuth will be controlled by a flag.
+	if err := auth.Do(grpcApiCall, ctx, callOptions, true); err != nil {
 		return err
 	}
 	if len(args) == 1 {
 		name := args[0]
-		if err != nil {
-			return err
-		}
 		logger.Debugf(ctx, "Retrieved %v projects", len(projects.Projects))
 		for _, v := range projects.Projects {
 			if v.Name == name {

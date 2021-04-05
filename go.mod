@@ -15,12 +15,13 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4
 	github.com/sirupsen/logrus v1.8.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
-	golang.org/x/oauth2 v0.0.0-20210126194326-f9ce19ea3013 // indirect
+	golang.org/x/oauth2 v0.0.0-20210126194326-f9ce19ea3013
 	google.golang.org/grpc v1.35.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
