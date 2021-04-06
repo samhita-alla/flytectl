@@ -25,6 +25,7 @@ var (
 
 	tokenChannel chan *goauth.Token
 	errorChannel chan error
+	timeoutChannel chan bool
 
 	stateString string
 	nonces string

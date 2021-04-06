@@ -9,6 +9,11 @@ import (
 	"google.golang.org/grpc"
 	"net/http"
 	"net/url"
+	"time"
+)
+
+const (
+	Timeout = 15 * time.Second
 )
 
 func StartAuthFlow(ctx context.Context) (grpc.CallOption, error) {
@@ -25,16 +30,21 @@ func StartAuthFlow(ctx context.Context) (grpc.CallOption, error) {
 	// Register the call back handler
 	http.HandleFunc(redirectUrl.Path, callbackHandler(clientConf)) // the oauth2 callback endpoint
 
-
-	tokenChannel = make(chan *goauth.Token)
-	errorChannel = make(chan error)
+	tokenChannel = make(chan *goauth.Token, 1)
+	errorChannel = make(chan error, 1)
+	timeoutChannel = make(chan bool, 1)
+	// Run timeout go routine inorder to timeout the authflow incase there are no redirects on the http endpoint created by the app
+	go func() {
+		time.Sleep(Timeout)
+		timeoutChannel <- true
+	}()
 
 	pkceCodeVerifier = generateCodeVerifier(64)
 	pkceCodeChallenge = generateCodeChallenge(pkceCodeVerifier)
 	stateString = state(32)
 	nonces = state(32)
 	// Replace S256 with one from cient config and provide a support to generate code challenge using the passed in method.
-	urlToOpen := clientConf.AuthCodeURL(stateString) + "&nonce=" + nonces +"&code_challenge=" +
+	urlToOpen := clientConf.AuthCodeURL(stateString) + "&nonce=" + nonces + "&code_challenge=" +
 		pkceCodeChallenge + "&code_challenge_method=S256"
 
 	go func() {
@@ -48,9 +58,11 @@ func StartAuthFlow(ctx context.Context) (grpc.CallOption, error) {
 	}
 	var token *goauth.Token
 	select {
-	case err = <- errorChannel:
+	case err = <-errorChannel:
 		return nil, err
-	case token = <- tokenChannel:
+	case _ = <-timeoutChannel:
+		return nil, fmt.Errorf("timeout occured during auth flow")
+	case token = <-tokenChannel:
 		var callOption grpc.CallOption
 		accessToken := FlyteCtlTokenSource{
 			flyteCtlToken: token,
