@@ -78,7 +78,7 @@ func terminateExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.C
 			}, _callOptions...)
 			return err
 		}
-		err := auth.Do(grpcApiCall, ctx, callOptions, true)
+		err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
 		if err != nil {
 			logger.Errorf(ctx, "Failed in terminating execution of %v execution due to %v ", name, err)
 			return err

@@ -129,7 +129,7 @@ func createExecutionCommand(ctx context.Context, args []string, cmdCtx cmdCore.C
 		exec, err = cmdCtx.AdminClient().CreateExecution(_ctx, executionRequest, _callOptions...)
 		return err
 	}
-	err = auth.Do(grpcApiCall, ctx, callOptions, true)
+	err = auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return err
 	}

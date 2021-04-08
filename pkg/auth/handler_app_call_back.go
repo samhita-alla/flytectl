@@ -2,11 +2,9 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"golang.org/x/oauth2"
 	"net/http"
-	"net/url"
 )
 
 func callbackHandler(c oauth2.Config) func(rw http.ResponseWriter, req *http.Request) {
@@ -33,28 +31,6 @@ func callbackHandler(c oauth2.Config) func(rw http.ResponseWriter, req *http.Req
 			)))
 			return
 		}
-		// ClientSecret is empty here. Basic auth is only needed to refresh the token.
-		client := newBasicClient(c.ClientID, c.ClientSecret)
-		if req.URL.Query().Get("refresh") != "" {
-			payload := url.Values{
-				"grant_type":    {"refresh_token"},
-				"refresh_token": {req.URL.Query().Get("refresh")},
-				"scope":         {"fosite"},
-			}
-			_, body, err := client.Post(c.Endpoint.TokenURL, payload)
-			if err != nil {
-				rw.Write([]byte(fmt.Sprintf(`<p>Could not refresh token %s</p>`, err)))
-				return
-			}
-			rw.Write([]byte(fmt.Sprintf(`<p>Got a response from the refresh grant:<br><code>%s</code></p>`, body)))
-			var tj oauth2.Token
-			if err = json.Unmarshal([]byte(body), &tj); err != nil {
-				return
-			}
-			tokenChannel <- &tj
-			return
-		}
-
 		if req.URL.Query().Get("state") != stateString {
 			errorChannel <- fmt.Errorf("possibly a csrf attack")
 			rw.Write([]byte(fmt.Sprintln(`<p>Possibly a CSRF attack.</p>`,

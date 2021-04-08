@@ -41,7 +41,10 @@ func updateWithCachedOrRefreshedToken(ctx context.Context, callOptions []grpc.Ca
 }
 
 func Do(grpcApiCallContext AdminGrpcApiCallContext, ctx context.Context, callOptions []grpc.CallOption, useAuth bool) error {
-	callOptions = updateWithCachedOrRefreshedToken(ctx, callOptions)
+	// Fetch from the cache only when usAuth is enabled.
+	if useAuth {
+		callOptions = updateWithCachedOrRefreshedToken(ctx, callOptions)
+	}
 	if grpcStatusError := grpcApiCallContext(ctx, callOptions); grpcStatusError != nil {
 		if grpcStatus, ok := status.FromError(grpcStatusError) ; ok && grpcStatus.Code() == codes.Unauthenticated && useAuth {
 			var err error

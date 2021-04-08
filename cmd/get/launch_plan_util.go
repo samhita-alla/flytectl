@@ -3,6 +3,7 @@ package get
 import (
 	"context"
 	"fmt"
+	"github.com/flyteorg/flytectl/cmd/config"
 	"github.com/flyteorg/flytectl/pkg/auth"
 	"google.golang.org/grpc"
 
@@ -63,7 +64,7 @@ func FetchAllVerOfLP(ctx context.Context, lpName string, project string, domain 
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(grpcApiCall, ctx, callOptions, true)
+	err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +101,7 @@ func FetchLPVersion(ctx context.Context, name string, version string, project st
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(grpcApiCall, ctx, callOptions, true)
+	err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}

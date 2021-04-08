@@ -90,7 +90,7 @@ func getWorkflowFunc(ctx context.Context, args []string, cmdCtx cmdCore.CommandC
 			}
 			return nil
 		}
-		err := auth.Do(grpcApiCall, ctx, callOptions, true)
+		err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
 		if err != nil {
 			return err
 		}

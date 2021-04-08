@@ -3,6 +3,7 @@ package create
 import (
 	"context"
 	"fmt"
+	"github.com/flyteorg/flytectl/cmd/config"
 	"github.com/flyteorg/flytectl/pkg/auth"
 	"google.golang.org/grpc"
 	"io/ioutil"
@@ -95,7 +96,7 @@ func createProjectsCommand(ctx context.Context, args []string, cmdCtx cmdCore.Co
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(grpcApiCall, ctx, callOptions, true)
+	err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return err
 	}
