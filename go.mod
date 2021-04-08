@@ -21,6 +21,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
+	github.com/zalando/go-keyring v0.1.1
 	golang.org/x/oauth2 v0.0.0-20210126194326-f9ce19ea3013
 	google.golang.org/grpc v1.35.0
 	google.golang.org/protobuf v1.25.0

@@ -2,28 +2,32 @@ package auth
 
 import (
 	"context"
-
-	goauth "golang.org/x/oauth2"
+	"golang.org/x/oauth2"
 )
+// Initialize this config once and use it in different flows.
+var clientConf *oauth2.Config
 
-func GenerateClientConfig(ctx context.Context) (goauth.Config, error) {
+func GenerateClientConfig(ctx context.Context) (*oauth2.Config, error) {
+	if clientConf != nil {
+		return clientConf, nil
+	}
 	var clientConfigFromAdmin ClientConfigFromAdmin
 	var serverConfigFromAdmin ServerConfigFromAdmin
 	var err error
 	if clientConfigFromAdmin, err = GetClientConfigFromAdmin(ctx); err != nil {
-		return goauth.Config{}, err
+		return nil, err
 	}
 	if serverConfigFromAdmin, err = GetAuthServerConfigFromAdmin(ctx); err != nil {
-		return goauth.Config{}, err
+		return nil, err
 	}
-	genClientConf := goauth.Config{
+	clientConf = &oauth2.Config{
 		ClientID: clientConfigFromAdmin.ClientId,
 		RedirectURL: clientConfigFromAdmin.RedirectUri,
 		Scopes: serverConfigFromAdmin.ScopesSupported,
-		Endpoint: goauth.Endpoint{
+		Endpoint: oauth2.Endpoint{
 			TokenURL: serverConfigFromAdmin.TokenEndpoint,
 			AuthURL: serverConfigFromAdmin.AuthorizationEndpoint,
 		},
 	}
-	return genClientConf, nil
+	return clientConf, nil
 }

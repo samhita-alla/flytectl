@@ -3,6 +3,8 @@ package create
 import (
 	"context"
 	"fmt"
+	"github.com/flyteorg/flytectl/pkg/auth"
+	"google.golang.org/grpc"
 	"io/ioutil"
 
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
@@ -77,16 +79,23 @@ func createProjectsCommand(ctx context.Context, args []string, cmdCtx cmdCore.Co
 	if project.Name == "" {
 		return fmt.Errorf("project name is required flag")
 	}
-	_, err := cmdCtx.AdminClient().RegisterProject(ctx, &admin.ProjectRegisterRequest{
-		Project: &admin.Project{
-			Id:          project.ID,
-			Name:        project.Name,
-			Description: project.Description,
-			Labels: &admin.Labels{
-				Values: project.Labels,
+
+	var callOptions []grpc.CallOption
+	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		var err error
+		_, err = cmdCtx.AdminClient().RegisterProject(_ctx, &admin.ProjectRegisterRequest{
+			Project: &admin.Project{
+				Id:          project.ID,
+				Name:        project.Name,
+				Description: project.Description,
+				Labels: &admin.Labels{
+					Values: project.Labels,
+				},
 			},
-		},
-	})
+		}, _callOptions...)
+		return err
+	}
+	err := auth.Do(grpcApiCall, ctx, callOptions, true)
 	if err != nil {
 		return err
 	}

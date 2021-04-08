@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	goauth "golang.org/x/oauth2"
+	"golang.org/x/oauth2"
 	"math/big"
 )
 
@@ -23,7 +23,7 @@ var (
 	// client to the auth server as required for PKCE.
 	pkceCodeChallenge string
 
-	tokenChannel chan *goauth.Token
+	tokenChannel chan *oauth2.Token
 	errorChannel chan error
 	timeoutChannel chan bool
 
@@ -85,16 +85,16 @@ func state(n int) string {
 
 
 type FlyteCtlTokenSource struct {
-	flyteCtlToken *goauth.Token
+	flyteCtlToken *oauth2.Token
 }
 
-func (ts *FlyteCtlTokenSource) Token() (*goauth.Token, error) {
+func (ts *FlyteCtlTokenSource) Token() (*oauth2.Token, error) {
 	t := ts.flyteCtlToken
 	return t, nil
 }
 
 type InsecurePerRPCCredentials struct{
-	goauth.TokenSource
+	oauth2.TokenSource
 }
 
 func (cr InsecurePerRPCCredentials) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {

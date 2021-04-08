@@ -2,22 +2,63 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/flyteorg/flytestdlib/logger"
 	"github.com/pkg/browser"
-	goauth "golang.org/x/oauth2"
-	"google.golang.org/grpc"
+	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"
 	"time"
 )
 
 const (
-	Timeout = 15 * time.Second
+	Timeout = 300 * time.Second
+	RefreshTime = 5 * time.Minute
 )
 
-func StartAuthFlow(ctx context.Context) (grpc.CallOption, error) {
-	var clientConf goauth.Config
+func RefreshTheToken(ctx context.Context, clientConf *oauth2.Config, token *oauth2.Token) *oauth2.Token {
+	// ClientSecret is empty here. Basic auth is only needed to refresh the token.
+	client := newBasicClient(clientConf.ClientID, clientConf.ClientSecret)
+	payload := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token.RefreshToken},
+		"scope":         {clientConf.Scopes[0]},
+	}
+	_, body, err := client.Post(clientConf.Endpoint.TokenURL, payload)
+	if err != nil {
+		logger.Errorf(ctx, "could not refresh token with expiry at %v due to %v", token.Expiry, err)
+		return nil
+	}
+
+	var refreshedToken oauth2.Token
+	if err = json.Unmarshal([]byte(body), &refreshedToken); err != nil {
+		return nil
+	}
+	logger.Debugf(ctx, "got a response from the refresh grant for old expiry %v with new expiry %v",
+		token.Expiry, refreshedToken.Expiry)
+	if err = defaultCacheProvider.SaveToken(ctx, refreshedToken); err != nil {
+		logger.Errorf(ctx, "unable to save the refreshed token due to %v", err)
+	}
+	return &refreshedToken
+}
+
+// Fetch token from cache
+func FetchTokenFromCacheOrRefreshIt(ctx context.Context) *oauth2.Token {
+	if token, err := defaultCacheProvider.GetToken(ctx); err == nil {
+		if token.Expiry.Add(-RefreshTime).Before(time.Now()) {
+			// Generate the client config by fetching the discovery endpoint data from admin.
+			if clientConf, err = GenerateClientConfig(ctx); err != nil {
+				return nil
+			}
+			return RefreshTheToken(ctx, clientConf, token)
+		}
+		return token
+	}
+	return nil
+}
+
+func FetchTokenFromAuthFlow(ctx context.Context) (*oauth2.Token, error) {
 	var err error
 	// Generate the client config by fetching the discovery endpoint data from admin.
 	if clientConf, err = GenerateClientConfig(ctx); err != nil {
@@ -28,12 +69,13 @@ func StartAuthFlow(ctx context.Context) (grpc.CallOption, error) {
 		return nil, err
 	}
 	// Register the call back handler
-	http.HandleFunc(redirectUrl.Path, callbackHandler(clientConf)) // the oauth2 callback endpoint
+	http.HandleFunc(redirectUrl.Path, callbackHandler(*clientConf)) // the oauth2 callback endpoint
 
-	tokenChannel = make(chan *goauth.Token, 1)
+	tokenChannel = make(chan *oauth2.Token, 1)
 	errorChannel = make(chan error, 1)
 	timeoutChannel = make(chan bool, 1)
-	// Run timeout go routine inorder to timeout the authflow incase there are no redirects on the http endpoint created by the app
+	// Run timeout go routine inorder to timeout the authflow incase there are no redirects on the http endpoint
+	// created by the app
 	go func() {
 		time.Sleep(Timeout)
 		timeoutChannel <- true
@@ -43,31 +85,31 @@ func StartAuthFlow(ctx context.Context) (grpc.CallOption, error) {
 	pkceCodeChallenge = generateCodeChallenge(pkceCodeVerifier)
 	stateString = state(32)
 	nonces = state(32)
-	// Replace S256 with one from cient config and provide a support to generate code challenge using the passed in method.
+	// Replace S256 with one from cient config and provide a support to generate code challenge using the passed
+	// in method.
 	urlToOpen := clientConf.AuthCodeURL(stateString) + "&nonce=" + nonces + "&code_challenge=" +
 		pkceCodeChallenge + "&code_challenge_method=S256"
 
 	go func() {
 		if err = http.ListenAndServe(redirectUrl.Host, nil); err != nil {
-			logger.Fatal(ctx, "Couldn't start the callback http server on host %v due to %v", redirectUrl.Host, err)
+			logger.Fatal(ctx, "Couldn't start the callback http server on host %v due to %v", redirectUrl.Host,
+				err)
 		}
 	}()
 	fmt.Println("Opening the browser at " + urlToOpen)
 	if err = browser.OpenURL(urlToOpen); err != nil {
 		return nil, err
 	}
-	var token *goauth.Token
+	var token *oauth2.Token
 	select {
 	case err = <-errorChannel:
 		return nil, err
 	case _ = <-timeoutChannel:
 		return nil, fmt.Errorf("timeout occured during auth flow")
 	case token = <-tokenChannel:
-		var callOption grpc.CallOption
-		accessToken := FlyteCtlTokenSource{
-			flyteCtlToken: token,
+		if err = defaultCacheProvider.SaveToken(ctx, *token); err != nil {
+			logger.Errorf(ctx, "unable to save the refreshed token due to %v", err)
 		}
-		callOption = grpc.PerRPCCredsCallOption{Creds: InsecurePerRPCCredentials{TokenSource: &accessToken}}
-		return callOption, nil
+		return token, nil
 	}
 }
