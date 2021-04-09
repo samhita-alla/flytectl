@@ -5,8 +5,9 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"golang.org/x/oauth2"
 	"math/big"
+
+	"golang.org/x/oauth2"
 )
 
 // The following provides the setup required for the client to perform the "Authorization Code" flow with PKCE in order

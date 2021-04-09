@@ -3,13 +3,14 @@ package get
 import (
 	"context"
 	"fmt"
-	"github.com/flyteorg/flytectl/cmd/config"
-	"github.com/flyteorg/flytectl/pkg/auth"
-	"google.golang.org/grpc"
 
+	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
+
+	"google.golang.org/grpc"
 )
 
 // Reads the launchplan config to drive fetching the correct launch plans.
@@ -48,7 +49,7 @@ func FetchAllVerOfLP(ctx context.Context, lpName string, project string, domain 
 
 	var tList *admin.LaunchPlanList
 	var callOptions []grpc.CallOption
-	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+	grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 		var err error
 		tList, err = cmdCtx.AdminClient().ListLaunchPlans(_ctx, &admin.ResourceListRequest{
 			Id: &admin.NamedEntityIdentifier{
@@ -64,7 +65,7 @@ func FetchAllVerOfLP(ctx context.Context, lpName string, project string, domain 
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +89,7 @@ func FetchLPVersion(ctx context.Context, name string, version string, project st
 
 	var callOptions []grpc.CallOption
 	var lp *admin.LaunchPlan
-	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+	grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 		var err error
 		lp, err = cmdCtx.AdminClient().GetLaunchPlan(_ctx, &admin.ObjectGetRequest{
 			Id: &core.Identifier{
@@ -101,7 +102,7 @@ func FetchLPVersion(ctx context.Context, name string, version string, project st
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}

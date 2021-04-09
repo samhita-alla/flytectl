@@ -2,16 +2,16 @@ package get
 
 import (
 	"context"
-	"github.com/flyteorg/flytectl/pkg/auth"
-	"google.golang.org/grpc"
-
-	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
-	"github.com/flyteorg/flytestdlib/logger"
-	"github.com/golang/protobuf/proto"
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flytectl/pkg/printer"
+	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
+	"github.com/flyteorg/flytestdlib/logger"
+
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -67,16 +67,16 @@ func getProjectsFunc(ctx context.Context, args []string, cmdCtx cmdCore.CommandC
 	adminPrinter := printer.Printer{}
 	var projects *admin.Projects
 	var callOptions []grpc.CallOption
-	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+	grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 		var err error
-		projects, err = cmdCtx.AdminClient().ListProjects(ctx, &admin.ProjectListRequest{}, _callOptions...)
+		projects, err = cmdCtx.AdminClient().ListProjects(_ctx, &admin.ProjectListRequest{}, _callOptions...)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 	// useAuth will be controlled by a flag.
-	if err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth); err != nil {
+	if err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth); err != nil {
 		return err
 	}
 	if len(args) == 1 {

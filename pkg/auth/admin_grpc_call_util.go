@@ -2,16 +2,17 @@ package auth
 
 import (
 	"context"
-	"github.com/flyteorg/flyteidl/clients/go/admin"
-	"golang.org/x/oauth2"
-	"google.golang.org/grpc/credentials/oauth"
 
+	"github.com/flyteorg/flyteidl/clients/go/admin"
+
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/status"
 )
 
-type AdminGrpcApiCallContext func(ctx context.Context, callOptions []grpc.CallOption) error
+type AdminGrpcAPICallContext func(ctx context.Context, callOptions []grpc.CallOption) error
 
 type AdminGrpcCallOptions func(ctx context.Context, callOptions []grpc.CallOption) ([]grpc.CallOption, error)
 
@@ -20,7 +21,7 @@ func callOptionForToken(ctx context.Context, token *oauth2.Token) grpc.CallOptio
 	accessToken := FlyteCtlTokenSource{
 		flyteCtlToken: token,
 	}
-	if  admin.GetConfig(ctx).UseInsecureConnection {
+	if admin.GetConfig(ctx).UseInsecureConnection {
 		callOption = grpc.PerRPCCredsCallOption{Creds: InsecurePerRPCCredentials{TokenSource: &accessToken}}
 	} else {
 		callOption = grpc.PerRPCCredsCallOption{Creds: oauth.TokenSource{TokenSource: &accessToken}}
@@ -45,18 +46,18 @@ func updateWithCachedOrRefreshedToken(ctx context.Context, callOptions []grpc.Ca
 	return append(callOptions, callOptionForToken(ctx, cachedOrRefreshedToken))
 }
 
-func Do(grpcApiCallContext AdminGrpcApiCallContext, ctx context.Context, callOptions []grpc.CallOption, useAuth bool) error {
+func Do(ctx context.Context, grpcAPICallContext AdminGrpcAPICallContext, callOptions []grpc.CallOption, useAuth bool) error {
 	// Fetch from the cache only when usAuth is enabled.
 	if useAuth {
 		callOptions = updateWithCachedOrRefreshedToken(ctx, callOptions)
 	}
-	if grpcStatusError := grpcApiCallContext(ctx, callOptions); grpcStatusError != nil {
+	if grpcStatusError := grpcAPICallContext(ctx, callOptions); grpcStatusError != nil {
 		if grpcStatus, ok := status.FromError(grpcStatusError); ok && grpcStatus.Code() == codes.Unauthenticated && useAuth {
 			var err error
 			if callOptions, err = updateWithNewToken(ctx, callOptions); err != nil {
 				return err
 			}
-			return grpcApiCallContext(ctx, callOptions)
+			return grpcAPICallContext(ctx, callOptions)
 		}
 		return grpcStatusError
 	}

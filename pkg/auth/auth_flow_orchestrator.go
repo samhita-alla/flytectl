@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/flyteorg/flytestdlib/logger"
-	"github.com/pkg/browser"
-	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/flyteorg/flytestdlib/logger"
+
+	"github.com/pkg/browser"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -64,12 +66,12 @@ func FetchTokenFromAuthFlow(ctx context.Context) (*oauth2.Token, error) {
 	if clientConf, err = GenerateClientConfig(); err != nil {
 		return nil, err
 	}
-	var redirectUrl *url.URL
-	if redirectUrl, err = url.Parse(clientConf.RedirectURL); err != nil {
+	var redirectURL *url.URL
+	if redirectURL, err = url.Parse(clientConf.RedirectURL); err != nil {
 		return nil, err
 	}
 	// Register the call back handler
-	http.HandleFunc(redirectUrl.Path, callbackHandler(*clientConf)) // the oauth2 callback endpoint
+	http.HandleFunc(redirectURL.Path, callbackHandler(*clientConf)) // the oauth2 callback endpoint
 
 	tokenChannel = make(chan *oauth2.Token, 1)
 	errorChannel = make(chan error, 1)
@@ -91,8 +93,8 @@ func FetchTokenFromAuthFlow(ctx context.Context) (*oauth2.Token, error) {
 		pkceCodeChallenge + "&code_challenge_method=S256"
 
 	go func() {
-		if err = http.ListenAndServe(redirectUrl.Host, nil); err != nil {
-			logger.Fatal(ctx, "Couldn't start the callback http server on host %v due to %v", redirectUrl.Host,
+		if err = http.ListenAndServe(redirectURL.Host, nil); err != nil {
+			logger.Fatal(ctx, "Couldn't start the callback http server on host %v due to %v", redirectURL.Host,
 				err)
 		}
 	}()
@@ -104,8 +106,8 @@ func FetchTokenFromAuthFlow(ctx context.Context) (*oauth2.Token, error) {
 	select {
 	case err = <-errorChannel:
 		return nil, err
-	case _ = <-timeoutChannel:
-		return nil, fmt.Errorf("timeout occured during auth flow")
+	case <-timeoutChannel:
+		return nil, fmt.Errorf("timeout occurred during auth flow")
 	case token = <-tokenChannel:
 		if err = defaultCacheProvider.SaveToken(ctx, *token); err != nil {
 			logger.Errorf(ctx, "unable to save the refreshed token due to %v", err)

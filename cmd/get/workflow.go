@@ -2,18 +2,17 @@ package get
 
 import (
 	"context"
-	"github.com/flyteorg/flytectl/pkg/auth"
-	"google.golang.org/grpc"
-
-	"github.com/flyteorg/flytestdlib/logger"
-	"github.com/golang/protobuf/proto"
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
 	"github.com/flyteorg/flytectl/pkg/adminutils"
+	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flytectl/pkg/printer"
-
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
+	"github.com/flyteorg/flytestdlib/logger"
+
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -70,7 +69,7 @@ func getWorkflowFunc(ctx context.Context, args []string, cmdCtx cmdCore.CommandC
 	if len(args) > 0 {
 		var callOptions []grpc.CallOption
 		var workflows *admin.WorkflowList
-		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 			var err error
 			workflows, err = cmdCtx.AdminClient().ListWorkflows(_ctx, &admin.ResourceListRequest{
 				Id: &admin.NamedEntityIdentifier{
@@ -90,7 +89,7 @@ func getWorkflowFunc(ctx context.Context, args []string, cmdCtx cmdCore.CommandC
 			}
 			return nil
 		}
-		err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+		err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 		if err != nil {
 			return err
 		}

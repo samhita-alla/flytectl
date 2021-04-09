@@ -6,8 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/flyteorg/flytectl/pkg/auth"
-	"google.golang.org/grpc"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -17,6 +15,7 @@ import (
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flytectl/pkg/printer"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
@@ -25,6 +24,7 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc"
 )
 
 const registrationProjectPattern = "{{ registration.project }}"
@@ -79,7 +79,7 @@ func register(ctx context.Context, message proto.Message, cmdCtx cmdCore.Command
 	case *admin.LaunchPlan:
 		launchPlan := message.(*admin.LaunchPlan)
 		var callOptions []grpc.CallOption
-		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 			var err error
 			_, err = cmdCtx.AdminClient().CreateLaunchPlan(_ctx, &admin.LaunchPlanCreateRequest{
 				Id: &core.Identifier{
@@ -93,11 +93,11 @@ func register(ctx context.Context, message proto.Message, cmdCtx cmdCore.Command
 			}, _callOptions...)
 			return err
 		}
-		return auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+		return auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	case *admin.WorkflowSpec:
 		workflowSpec := message.(*admin.WorkflowSpec)
 		var callOptions []grpc.CallOption
-		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 			var err error
 			_, err = cmdCtx.AdminClient().CreateWorkflow(_ctx, &admin.WorkflowCreateRequest{
 				Id: &core.Identifier{
@@ -111,11 +111,11 @@ func register(ctx context.Context, message proto.Message, cmdCtx cmdCore.Command
 			}, _callOptions...)
 			return err
 		}
-		return auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+		return auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	case *admin.TaskSpec:
 		taskSpec := message.(*admin.TaskSpec)
 		var callOptions []grpc.CallOption
-		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 			var err error
 			_, err = cmdCtx.AdminClient().CreateTask(ctx, &admin.TaskCreateRequest{
 				Id: &core.Identifier{
@@ -129,7 +129,7 @@ func register(ctx context.Context, message proto.Message, cmdCtx cmdCore.Command
 			}, _callOptions...)
 			return err
 		}
-		return auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+		return auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	default:
 		return fmt.Errorf("Failed registering unknown entity  %v", v)
 	}

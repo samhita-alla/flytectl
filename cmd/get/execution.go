@@ -2,16 +2,17 @@ package get
 
 import (
 	"context"
-	auth "github.com/flyteorg/flytectl/pkg/auth"
-	"google.golang.org/grpc"
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flytectl/pkg/printer"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
 	"github.com/flyteorg/flytestdlib/logger"
 	"github.com/golang/protobuf/proto"
+
+	"google.golang.org/grpc"
 )
 
 const (
@@ -73,7 +74,7 @@ func getExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.Command
 	if len(args) > 0 {
 		name := args[0]
 		var execution *admin.Execution
-		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 			var err error
 			execution, err = cmdCtx.AdminClient().GetExecution(
 				_ctx, &admin.WorkflowExecutionGetRequest{
@@ -85,14 +86,14 @@ func getExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.Command
 				}, _callOptions...)
 			return err
 		}
-		err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+		err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 		if err != nil {
 			return err
 		}
 		executions = append(executions, execution)
 	} else {
 		var executionList *admin.ExecutionList
-		grpcApiCallListExecs := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		grpcAPICallListExecs := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 			var err error
 			executionList, err = cmdCtx.AdminClient().ListExecutions(
 				_ctx, &admin.ResourceListRequest{
@@ -104,7 +105,7 @@ func getExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.Command
 				}, _callOptions...)
 			return err
 		}
-		err := auth.Do(grpcApiCallListExecs, ctx, callOptions, config.GetConfig().UseAuth)
+		err := auth.Do(ctx, grpcAPICallListExecs, callOptions, config.GetConfig().UseAuth)
 		if err != nil {
 			return err
 		}

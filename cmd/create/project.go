@@ -3,15 +3,15 @@ package create
 import (
 	"context"
 	"fmt"
-	"github.com/flyteorg/flytectl/cmd/config"
-	"github.com/flyteorg/flytectl/pkg/auth"
-	"google.golang.org/grpc"
 	"io/ioutil"
 
-	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
-	"gopkg.in/yaml.v2"
-
+	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flytectl/pkg/auth"
+	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
+
+	"google.golang.org/grpc"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -82,7 +82,7 @@ func createProjectsCommand(ctx context.Context, args []string, cmdCtx cmdCore.Co
 	}
 
 	var callOptions []grpc.CallOption
-	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+	grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 		var err error
 		_, err = cmdCtx.AdminClient().RegisterProject(_ctx, &admin.ProjectRegisterRequest{
 			Project: &admin.Project{
@@ -96,7 +96,7 @@ func createProjectsCommand(ctx context.Context, args []string, cmdCtx cmdCore.Co
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return err
 	}

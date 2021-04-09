@@ -3,13 +3,14 @@ package get
 import (
 	"context"
 	"fmt"
-	"github.com/flyteorg/flytectl/cmd/config"
-	"github.com/flyteorg/flytectl/pkg/auth"
-	"google.golang.org/grpc"
 
+	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
+
+	"google.golang.org/grpc"
 )
 
 // Reads the task config to drive fetching the correct tasks.
@@ -47,7 +48,7 @@ func FetchTaskForName(ctx context.Context, name string, project string, domain s
 func FetchAllVerOfTask(ctx context.Context, name string, project string, domain string, cmdCtx cmdCore.CommandContext) ([]*admin.Task, error) {
 	var callOptions []grpc.CallOption
 	var tList *admin.TaskList
-	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+	grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 		var err error
 		tList, err = cmdCtx.AdminClient().ListTasks(_ctx, &admin.ResourceListRequest{
 			Id: &admin.NamedEntityIdentifier{
@@ -66,7 +67,7 @@ func FetchAllVerOfTask(ctx context.Context, name string, project string, domain 
 		}
 		return nil
 	}
-	err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +93,7 @@ func FetchTaskLatestVersion(ctx context.Context, name string, project string, do
 func FetchTaskVersion(ctx context.Context, name string, version string, project string, domain string, cmdCtx cmdCore.CommandContext) (*admin.Task, error) {
 	var callOptions []grpc.CallOption
 	var t *admin.Task
-	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+	grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 		var err error
 		t, err = cmdCtx.AdminClient().GetTask(_ctx, &admin.ObjectGetRequest{
 			Id: &core.Identifier{
@@ -108,7 +109,7 @@ func FetchTaskVersion(ctx context.Context, name string, version string, project 
 		}
 		return nil
 	}
-	err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}

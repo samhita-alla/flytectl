@@ -2,14 +2,15 @@ package delete
 
 import (
 	"context"
-	"github.com/flyteorg/flytectl/pkg/auth"
-	"google.golang.org/grpc"
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
 	"github.com/flyteorg/flytestdlib/logger"
+
+	"google.golang.org/grpc"
 )
 
 // Long descriptions are whitespace sensitive when generating docs using sphinx.
@@ -67,7 +68,7 @@ func terminateExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.C
 		name := args[i]
 		logger.Infof(ctx, "Terminating execution of %v execution ", name)
 		var callOptions []grpc.CallOption
-		grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+		grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 			var err error
 			_, err = cmdCtx.AdminClient().TerminateExecution(_ctx, &admin.ExecutionTerminateRequest{
 				Id: &core.WorkflowExecutionIdentifier{
@@ -78,7 +79,7 @@ func terminateExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.C
 			}, _callOptions...)
 			return err
 		}
-		err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+		err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 		if err != nil {
 			logger.Errorf(ctx, "Failed in terminating execution of %v execution due to %v ", name, err)
 			return err

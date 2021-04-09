@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/flyteorg/flytestdlib/logger"
+
 	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
 )
@@ -37,8 +39,8 @@ func (t TokenCacheProvider) SaveToken(ctx context.Context, token oauth2.Token) e
 
 func (t TokenCacheProvider) GetToken(ctx context.Context) (*oauth2.Token, error) {
 	// get saved token
-	tokenJson, err := keyring.Get(t.serviceName, t.serviceUser)
-	if len(tokenJson) == 0 {
+	tokenJSON, err := keyring.Get(t.serviceName, t.serviceUser)
+	if len(tokenJSON) == 0 {
 		logger.Warnf(ctx, "no token found in the cache")
 		return nil, fmt.Errorf("no token found in the cache")
 	}
@@ -46,7 +48,7 @@ func (t TokenCacheProvider) GetToken(ctx context.Context) (*oauth2.Token, error)
 		return nil, err
 	}
 	token := oauth2.Token{}
-	if err = json.Unmarshal([]byte(tokenJson), &token); err != nil {
+	if err = json.Unmarshal([]byte(tokenJSON), &token); err != nil {
 		logger.Errorf(ctx, "unmarshalling error for saved token : %v", err)
 		return nil, err
 	}

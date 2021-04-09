@@ -21,8 +21,8 @@ func GenerateClientConfig() (*oauth2.Config, error) {
 		return nil, err
 	}
 	clientConf = &oauth2.Config{
-		ClientID:    clientConfigFromAdmin.ClientId,
-		RedirectURL: clientConfigFromAdmin.RedirectUri,
+		ClientID:    clientConfigFromAdmin.ClientID,
+		RedirectURL: clientConfigFromAdmin.RedirectURI,
 		Scopes:      serverConfigFromAdmin.ScopesSupported,
 		Endpoint: oauth2.Endpoint{
 			TokenURL: serverConfigFromAdmin.TokenEndpoint,

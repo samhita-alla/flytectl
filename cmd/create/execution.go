@@ -3,12 +3,13 @@ package create
 import (
 	"context"
 	"fmt"
-	"github.com/flyteorg/flytectl/pkg/auth"
-	"google.golang.org/grpc"
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
+
+	"google.golang.org/grpc"
 )
 
 const (
@@ -124,12 +125,12 @@ func createExecutionCommand(ctx context.Context, args []string, cmdCtx cmdCore.C
 	}
 	var callOptions []grpc.CallOption
 	var exec *admin.ExecutionCreateResponse
-	grpcApiCall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+	grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
 		var err error
 		exec, err = cmdCtx.AdminClient().CreateExecution(_ctx, executionRequest, _callOptions...)
 		return err
 	}
-	err = auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)
+	err = auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return err
 	}
