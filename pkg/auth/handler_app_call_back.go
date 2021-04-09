@@ -27,14 +27,12 @@ func callbackHandler(c oauth2.Config) func(rw http.ResponseWriter, req *http.Req
 		}
 		if req.URL.Query().Get("code") == "" {
 			errorChannel <- fmt.Errorf("could not find the authorize code")
-			rw.Write([]byte(fmt.Sprintln(`<p>Could not find the authorize code.</p>`,
-			)))
+			rw.Write([]byte(fmt.Sprintln(`<p>Could not find the authorize code.</p>`)))
 			return
 		}
 		if req.URL.Query().Get("state") != stateString {
 			errorChannel <- fmt.Errorf("possibly a csrf attack")
-			rw.Write([]byte(fmt.Sprintln(`<p>Possibly a CSRF attack.</p>`,
-			)))
+			rw.Write([]byte(fmt.Sprintln(`<p>Possibly a CSRF attack.</p>`)))
 			return
 		}
 		// We'll check whether we sent a code+PKCE request, and if so, send the code_verifier along when requesting the access token.
@@ -51,4 +49,3 @@ func callbackHandler(c oauth2.Config) func(rw http.ResponseWriter, req *http.Req
 		tokenChannel <- token
 	}
 }
-

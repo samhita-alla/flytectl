@@ -13,6 +13,7 @@ var defaultCacheProvider = TokenCacheProvider{
 	serviceUser: "flytectl-user",
 	serviceName: "flytectl",
 }
+
 type TokenCacheProvider struct {
 	serviceName string
 	serviceUser string

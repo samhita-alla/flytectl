@@ -77,12 +77,12 @@ func getExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.Command
 			var err error
 			execution, err = cmdCtx.AdminClient().GetExecution(
 				_ctx, &admin.WorkflowExecutionGetRequest{
-				Id: &core.WorkflowExecutionIdentifier{
-					Project: config.GetConfig().Project,
-					Domain:  config.GetConfig().Domain,
-					Name:    name,
-				},
-			}, _callOptions...)
+					Id: &core.WorkflowExecutionIdentifier{
+						Project: config.GetConfig().Project,
+						Domain:  config.GetConfig().Domain,
+						Name:    name,
+					},
+				}, _callOptions...)
 			return err
 		}
 		err := auth.Do(grpcApiCall, ctx, callOptions, config.GetConfig().UseAuth)

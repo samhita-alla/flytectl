@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+	"github.com/flyteorg/flyteidl/clients/go/admin"
 	"golang.org/x/oauth2"
+	"google.golang.org/grpc/credentials/oauth"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -13,13 +15,16 @@ type AdminGrpcApiCallContext func(ctx context.Context, callOptions []grpc.CallOp
 
 type AdminGrpcCallOptions func(ctx context.Context, callOptions []grpc.CallOption) ([]grpc.CallOption, error)
 
-
-func callOptionForToken(token *oauth2.Token) grpc.CallOption {
+func callOptionForToken(ctx context.Context, token *oauth2.Token) grpc.CallOption {
 	var callOption grpc.CallOption
 	accessToken := FlyteCtlTokenSource{
 		flyteCtlToken: token,
 	}
-	callOption = grpc.PerRPCCredsCallOption{Creds: InsecurePerRPCCredentials{TokenSource: &accessToken}}
+	if  admin.GetConfig(ctx).UseInsecureConnection {
+		callOption = grpc.PerRPCCredsCallOption{Creds: InsecurePerRPCCredentials{TokenSource: &accessToken}}
+	} else {
+		callOption = grpc.PerRPCCredsCallOption{Creds: oauth.TokenSource{TokenSource: &accessToken}}
+	}
 	return callOption
 }
 
@@ -27,17 +32,17 @@ func updateWithNewToken(ctx context.Context, callOptions []grpc.CallOption) ([]g
 	var newToken *oauth2.Token
 	var err error
 	if newToken, err = FetchTokenFromAuthFlow(ctx); err != nil {
-		return  nil, err
+		return nil, err
 	}
-	return append(callOptions, callOptionForToken(newToken)), nil
+	return append(callOptions, callOptionForToken(ctx, newToken)), nil
 }
 
 func updateWithCachedOrRefreshedToken(ctx context.Context, callOptions []grpc.CallOption) []grpc.CallOption {
 	var cachedOrRefreshedToken *oauth2.Token
 	if cachedOrRefreshedToken = FetchTokenFromCacheOrRefreshIt(ctx); cachedOrRefreshedToken == nil {
-		return  callOptions
+		return callOptions
 	}
-	return append(callOptions, callOptionForToken(cachedOrRefreshedToken))
+	return append(callOptions, callOptionForToken(ctx, cachedOrRefreshedToken))
 }
 
 func Do(grpcApiCallContext AdminGrpcApiCallContext, ctx context.Context, callOptions []grpc.CallOption, useAuth bool) error {
@@ -46,7 +51,7 @@ func Do(grpcApiCallContext AdminGrpcApiCallContext, ctx context.Context, callOpt
 		callOptions = updateWithCachedOrRefreshedToken(ctx, callOptions)
 	}
 	if grpcStatusError := grpcApiCallContext(ctx, callOptions); grpcStatusError != nil {
-		if grpcStatus, ok := status.FromError(grpcStatusError) ; ok && grpcStatus.Code() == codes.Unauthenticated && useAuth {
+		if grpcStatus, ok := status.FromError(grpcStatusError); ok && grpcStatus.Code() == codes.Unauthenticated && useAuth {
 			var err error
 			if callOptions, err = updateWithNewToken(ctx, callOptions); err != nil {
 				return err

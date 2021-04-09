@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	Timeout = 300 * time.Second
+	Timeout     = 10 * time.Second
 	RefreshTime = 5 * time.Minute
 )
 
@@ -23,7 +23,7 @@ func RefreshTheToken(ctx context.Context, clientConf *oauth2.Config, token *oaut
 	payload := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},
-		"scope":         {clientConf.Scopes[0]},
+		"scope":         {"all", "offline"},
 	}
 	_, body, err := client.Post(clientConf.Endpoint.TokenURL, payload)
 	if err != nil {
@@ -48,7 +48,7 @@ func FetchTokenFromCacheOrRefreshIt(ctx context.Context) *oauth2.Token {
 	if token, err := defaultCacheProvider.GetToken(ctx); err == nil {
 		if token.Expiry.Add(-RefreshTime).Before(time.Now()) {
 			// Generate the client config by fetching the discovery endpoint data from admin.
-			if clientConf, err = GenerateClientConfig(ctx); err != nil {
+			if clientConf, err = GenerateClientConfig(); err != nil {
 				return nil
 			}
 			return RefreshTheToken(ctx, clientConf, token)
@@ -61,7 +61,7 @@ func FetchTokenFromCacheOrRefreshIt(ctx context.Context) *oauth2.Token {
 func FetchTokenFromAuthFlow(ctx context.Context) (*oauth2.Token, error) {
 	var err error
 	// Generate the client config by fetching the discovery endpoint data from admin.
-	if clientConf, err = GenerateClientConfig(ctx); err != nil {
+	if clientConf, err = GenerateClientConfig(); err != nil {
 		return nil, err
 	}
 	var redirectUrl *url.URL

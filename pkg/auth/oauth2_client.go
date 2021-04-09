@@ -23,12 +23,12 @@ var (
 	// client to the auth server as required for PKCE.
 	pkceCodeChallenge string
 
-	tokenChannel chan *oauth2.Token
-	errorChannel chan error
+	tokenChannel   chan *oauth2.Token
+	errorChannel   chan error
 	timeoutChannel chan bool
 
 	stateString string
-	nonces string
+	nonces      string
 )
 
 // The following sets up the requirements for generating a standards compliant PKCE code verifier.
@@ -83,7 +83,6 @@ func state(n int) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(data))
 }
 
-
 type FlyteCtlTokenSource struct {
 	flyteCtlToken *oauth2.Token
 }
@@ -93,7 +92,7 @@ func (ts *FlyteCtlTokenSource) Token() (*oauth2.Token, error) {
 	return t, nil
 }
 
-type InsecurePerRPCCredentials struct{
+type InsecurePerRPCCredentials struct {
 	oauth2.TokenSource
 }
 

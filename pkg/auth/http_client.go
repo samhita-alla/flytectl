@@ -23,7 +23,7 @@ func newBasicClient(clientID string, clientSecret string) *basicClient {
 type basicClient struct {
 	clientID     string
 	clientSecret string
-	client http.Client
+	client       http.Client
 }
 
 // Post sends a request to the given uri with a payload of url values.
@@ -48,4 +48,3 @@ func (c *basicClient) Post(uri string, payload url.Values) (res *http.Response, 
 
 	return res, string(bodyBytes), err
 }
-
