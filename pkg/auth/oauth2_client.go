@@ -66,8 +66,7 @@ func randomString(length int) string {
 func generateCodeChallenge(codeVerifier string) string {
 	// Create a sha-265 hash from the code verifier...
 	s256 := sha256.New()
-	s256.Write([]byte(codeVerifier))
-
+	_, _ = s256.Write([]byte(codeVerifier))
 	// Then base64 encode the hash sum to create a code challenge...
 	return base64.RawURLEncoding.EncodeToString(s256.Sum(nil))
 }
