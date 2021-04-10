@@ -2,7 +2,7 @@ package auth
 
 import (
 	"encoding/json"
-	"io"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -41,7 +41,7 @@ func GetClientConfigFromAdmin() (ClientConfigFromAdmin, error) {
 	}
 	defer resp.Body.Close()
 	var body []byte
-	if body, err = io.ReadAll(resp.Body); err != nil {
+	if body, err = ioutil.ReadAll(resp.Body); err != nil {
 		return clientConfigFromAdmin, err
 	}
 	if jsonErr := json.Unmarshal(body, &clientConfigFromAdmin); jsonErr != nil {
@@ -60,7 +60,7 @@ func GetAuthServerConfigFromAdmin() (ServerConfigFromAdmin, error) {
 	}
 	defer resp.Body.Close()
 	var body []byte
-	if body, err = io.ReadAll(resp.Body); err != nil {
+	if body, err = ioutil.ReadAll(resp.Body); err != nil {
 		return serverConfigFromAdmin, err
 	}
 	if jsonErr := json.Unmarshal(body, &serverConfigFromAdmin); jsonErr != nil {
