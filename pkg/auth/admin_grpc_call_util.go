@@ -18,7 +18,7 @@ type AdminGrpcCallOptions func(ctx context.Context, callOptions []grpc.CallOptio
 
 func callOptionForToken(ctx context.Context, token *oauth2.Token) grpc.CallOption {
 	var callOption grpc.CallOption
-	accessToken := FlyteCtlTokenSource{
+	accessToken := FlyteCtlInsecureTokenSource{
 		flyteCtlToken: token,
 	}
 	if admin.GetConfig(ctx).UseInsecureConnection {

@@ -83,11 +83,11 @@ func state(n int) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(data))
 }
 
-type FlyteCtlTokenSource struct {
+type FlyteCtlInsecureTokenSource struct {
 	flyteCtlToken *oauth2.Token
 }
 
-func (ts *FlyteCtlTokenSource) Token() (*oauth2.Token, error) {
+func (ts *FlyteCtlInsecureTokenSource) Token() (*oauth2.Token, error) {
 	t := ts.flyteCtlToken
 	return t, nil
 }

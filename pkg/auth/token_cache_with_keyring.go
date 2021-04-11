@@ -33,7 +33,7 @@ func (t TokenCacheProvider) SaveToken(ctx context.Context, token oauth2.Token) e
 		logger.Errorf(ctx, "unable to save token due to %v", err)
 		return err
 	}
-	logger.Debugf(ctx, "fetched token from cache with expiry at %v", token.Expiry)
+	logger.Debugf(ctx, "Save token in cache with expiry at %v", token.Expiry)
 	return nil
 }
 

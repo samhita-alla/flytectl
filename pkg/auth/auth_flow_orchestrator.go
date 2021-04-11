@@ -50,7 +50,7 @@ func FetchTokenFromCacheOrRefreshIt(ctx context.Context) *oauth2.Token {
 	if token, err := defaultCacheProvider.GetToken(ctx); err == nil {
 		if token.Expiry.Add(-RefreshTime).Before(time.Now()) {
 			// Generate the client config by fetching the discovery endpoint data from admin.
-			if clientConf, err = GenerateClientConfig(); err != nil {
+			if clientConf, err = GenerateClientConfig(ctx); err != nil {
 				return nil
 			}
 			return RefreshTheToken(ctx, clientConf, token)
@@ -63,7 +63,7 @@ func FetchTokenFromCacheOrRefreshIt(ctx context.Context) *oauth2.Token {
 func FetchTokenFromAuthFlow(ctx context.Context) (*oauth2.Token, error) {
 	var err error
 	// Generate the client config by fetching the discovery endpoint data from admin.
-	if clientConf, err = GenerateClientConfig(); err != nil {
+	if clientConf, err = GenerateClientConfig(ctx); err != nil {
 		return nil, err
 	}
 	var redirectURL *url.URL
@@ -110,8 +110,9 @@ func FetchTokenFromAuthFlow(ctx context.Context) (*oauth2.Token, error) {
 		return nil, fmt.Errorf("timeout occurred during auth flow")
 	case token = <-tokenChannel:
 		if err = defaultCacheProvider.SaveToken(ctx, *token); err != nil {
-			logger.Errorf(ctx, "unable to save the refreshed token due to %v", err)
+			logger.Errorf(ctx, "unable to save the new token due to %v", err)
 		}
+		fmt.Printf("\n"+token.AccessToken+"\n")
 		return token, nil
 	}
 }
