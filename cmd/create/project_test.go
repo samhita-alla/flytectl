@@ -20,7 +20,7 @@ var (
 func createProjectSetup() {
 	ctx = testutils.Ctx
 	cmdCtx = testutils.CmdCtx
-	mockClient = testutils.MockClient
+	mockClient = testutils.MockAdminClient
 	projectRegisterRequest = &admin.ProjectRegisterRequest{
 		Project: &admin.Project{
 			Id:          projectValue,

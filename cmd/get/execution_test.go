@@ -21,8 +21,9 @@ func TestListExecutionFunc(t *testing.T) {
 	config.GetConfig().Output = output
 	var args []string
 	mockClient := new(mocks.AdminServiceClient)
+	mockAuthClient := new(mocks.AuthServiceClient)
 	mockOutStream := new(io.Writer)
-	cmdCtx := cmdCore.NewCommandContext(mockClient, *mockOutStream)
+	cmdCtx := cmdCore.NewCommandContext(mockClient, mockAuthClient, *mockOutStream)
 	execListRequest := &admin.ResourceListRequest{
 		Limit: 100,
 		Id: &admin.NamedEntityIdentifier{
@@ -71,8 +72,9 @@ func TestListExecutionFuncWithError(t *testing.T) {
 	config.GetConfig().Output = output
 	var args []string
 	mockClient := new(mocks.AdminServiceClient)
+	mockAuthClient := new(mocks.AuthServiceClient)
 	mockOutStream := new(io.Writer)
-	cmdCtx := cmdCore.NewCommandContext(mockClient, *mockOutStream)
+	cmdCtx := cmdCore.NewCommandContext(mockClient, mockAuthClient, *mockOutStream)
 	execListRequest := &admin.ResourceListRequest{
 		Limit: 100,
 		Id: &admin.NamedEntityIdentifier{
@@ -117,8 +119,9 @@ func TestGetExecutionFunc(t *testing.T) {
 	config.GetConfig().Domain = domainValue
 	config.GetConfig().Output = output
 	mockClient := new(mocks.AdminServiceClient)
+	mockAuthClient := new(mocks.AuthServiceClient)
 	mockOutStream := new(io.Writer)
-	cmdCtx := cmdCore.NewCommandContext(mockClient, *mockOutStream)
+	cmdCtx := cmdCore.NewCommandContext(mockClient, mockAuthClient, *mockOutStream)
 	execGetRequest := &admin.WorkflowExecutionGetRequest{
 		Id: &core.WorkflowExecutionIdentifier{
 			Project: projectValue,
@@ -163,8 +166,9 @@ func TestGetExecutionFuncWithError(t *testing.T) {
 	config.GetConfig().Domain = domainValue
 	config.GetConfig().Output = output
 	mockClient := new(mocks.AdminServiceClient)
+	mockAuthClient := new(mocks.AuthServiceClient)
 	mockOutStream := new(io.Writer)
-	cmdCtx := cmdCore.NewCommandContext(mockClient, *mockOutStream)
+	cmdCtx := cmdCore.NewCommandContext(mockClient, mockAuthClient, *mockOutStream)
 	execGetRequest := &admin.WorkflowExecutionGetRequest{
 		Id: &core.WorkflowExecutionIdentifier{
 			Project: projectValue,

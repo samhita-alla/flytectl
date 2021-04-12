@@ -67,7 +67,7 @@ func FetchAllVerOfTask(ctx context.Context, name string, project string, domain 
 		}
 		return nil
 	}
-	err := auth.Do(ctx, cmdCtx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func FetchTaskVersion(ctx context.Context, name string, version string, project 
 		}
 		return nil
 	}
-	err := auth.Do(ctx, cmdCtx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}

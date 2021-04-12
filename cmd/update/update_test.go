@@ -4,8 +4,13 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/flyteorg/flytectl/cmd/testutils"
+
 	"github.com/stretchr/testify/assert"
 )
+
+var setup = testutils.Setup
+var tearDownAndVerify = testutils.TearDownAndVerify
 
 func TestUpdateCommand(t *testing.T) {
 	updateCommand := CreateUpdateCommand()

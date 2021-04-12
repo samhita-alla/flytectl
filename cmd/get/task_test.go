@@ -23,7 +23,7 @@ var (
 func getTaskSetup() {
 	ctx = testutils.Ctx
 	cmdCtx = testutils.CmdCtx
-	mockClient = testutils.MockClient
+	mockClient = testutils.MockAdminClient
 	argsTask = []string{"task1"}
 	sortedListLiteralType := core.Variable{
 		Type: &core.LiteralType{

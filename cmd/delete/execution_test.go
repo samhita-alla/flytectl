@@ -3,10 +3,11 @@ package delete
 import (
 	"context"
 	"errors"
-	"io"
 	"testing"
 
+	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flytectl/cmd/testutils"
 	"github.com/flyteorg/flyteidl/clients/go/admin/mocks"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
@@ -15,26 +16,39 @@ import (
 )
 
 var (
-	ctx  context.Context
-	args []string
+	ctx                   context.Context
+	mockClient            *mocks.AdminServiceClient
+	args                  []string
+	cmdCtx                cmdCore.CommandContext
+	terminateExecRequests []*admin.ExecutionTerminateRequest
+	terminateExecResponse *admin.ExecutionTerminateResponse
 )
 
-func setup() {
-	ctx = context.Background()
-	args = []string{}
+var setup = testutils.Setup
+
+func deleteExecutionSetup() {
+	ctx = testutils.Ctx
+	cmdCtx = testutils.CmdCtx
+	mockClient = testutils.MockAdminClient
+	args = append(args, "exec1", "exec2")
+	terminateExecRequests = []*admin.ExecutionTerminateRequest{
+		{Id: &core.WorkflowExecutionIdentifier{
+			Name:    "exec1",
+			Project: config.GetConfig().Project,
+			Domain:  config.GetConfig().Domain,
+		}},
+		{Id: &core.WorkflowExecutionIdentifier{
+			Name:    "exec2",
+			Project: config.GetConfig().Project,
+			Domain:  config.GetConfig().Domain,
+		}},
+	}
+	terminateExecResponse = &admin.ExecutionTerminateResponse{}
 }
 
 func TestTerminateExecutionFunc(t *testing.T) {
 	setup()
-	args = append(args, "exec1", "exec2")
-	mockClient := new(mocks.AdminServiceClient)
-	mockOutStream := new(io.Writer)
-	cmdCtx := cmdCore.NewCommandContext(mockClient, *mockOutStream)
-	terminateExecRequests := []*admin.ExecutionTerminateRequest{
-		{Id: &core.WorkflowExecutionIdentifier{Name: "exec1"}},
-		{Id: &core.WorkflowExecutionIdentifier{Name: "exec2"}},
-	}
-	terminateExecResponse := &admin.ExecutionTerminateResponse{}
+	deleteExecutionSetup()
 	mockClient.OnTerminateExecutionMatch(ctx, terminateExecRequests[0]).Return(terminateExecResponse, nil)
 	mockClient.OnTerminateExecutionMatch(ctx, terminateExecRequests[1]).Return(terminateExecResponse, nil)
 	err := terminateExecutionFunc(ctx, args, cmdCtx)
@@ -45,15 +59,7 @@ func TestTerminateExecutionFunc(t *testing.T) {
 
 func TestTerminateExecutionFuncWithError(t *testing.T) {
 	setup()
-	args = append(args, "exec1", "exec2")
-	mockClient := new(mocks.AdminServiceClient)
-	mockOutStream := new(io.Writer)
-	cmdCtx := cmdCore.NewCommandContext(mockClient, *mockOutStream)
-	terminateExecRequests := []*admin.ExecutionTerminateRequest{
-		{Id: &core.WorkflowExecutionIdentifier{Name: "exec1"}},
-		{Id: &core.WorkflowExecutionIdentifier{Name: "exec2"}},
-	}
-	terminateExecResponse := &admin.ExecutionTerminateResponse{}
+	deleteExecutionSetup()
 	mockClient.OnTerminateExecutionMatch(ctx, terminateExecRequests[0]).Return(nil, errors.New("failed to terminate"))
 	mockClient.OnTerminateExecutionMatch(ctx, terminateExecRequests[1]).Return(terminateExecResponse, nil)
 	err := terminateExecutionFunc(ctx, args, cmdCtx)
@@ -64,15 +70,7 @@ func TestTerminateExecutionFuncWithError(t *testing.T) {
 
 func TestTerminateExecutionFuncWithPartialSuccess(t *testing.T) {
 	setup()
-	args = append(args, "exec1", "exec2")
-	mockClient := new(mocks.AdminServiceClient)
-	mockOutStream := new(io.Writer)
-	cmdCtx := cmdCore.NewCommandContext(mockClient, *mockOutStream)
-	terminateExecRequests := []*admin.ExecutionTerminateRequest{
-		{Id: &core.WorkflowExecutionIdentifier{Name: "exec1"}},
-		{Id: &core.WorkflowExecutionIdentifier{Name: "exec2"}},
-	}
-	terminateExecResponse := &admin.ExecutionTerminateResponse{}
+	deleteExecutionSetup()
 	mockClient.OnTerminateExecutionMatch(ctx, terminateExecRequests[0]).Return(terminateExecResponse, nil)
 	mockClient.OnTerminateExecutionMatch(ctx, terminateExecRequests[1]).Return(nil, errors.New("failed to terminate"))
 	err := terminateExecutionFunc(ctx, args, cmdCtx)

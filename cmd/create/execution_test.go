@@ -17,7 +17,7 @@ import (
 func createExecutionSetup() {
 	ctx = testutils.Ctx
 	cmdCtx = testutils.CmdCtx
-	mockClient = testutils.MockClient
+	mockClient = testutils.MockAdminClient
 	sortedListLiteralType := core.Variable{
 		Type: &core.LiteralType{
 			Type: &core.LiteralType_CollectionType{

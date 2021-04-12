@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	cmdCore "github.com/flyteorg/flytectl/cmd/core"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/service"
 	"github.com/flyteorg/flytestdlib/logger"
 
 	"github.com/pkg/browser"
@@ -47,11 +47,11 @@ func RefreshTheToken(ctx context.Context, clientConf *oauth2.Config, token *oaut
 }
 
 // Fetch token from cache
-func FetchTokenFromCacheOrRefreshIt(ctx context.Context, cmdCtx cmdCore.CommandContext) *oauth2.Token {
+func FetchTokenFromCacheOrRefreshIt(ctx context.Context, authClient service.AuthServiceClient) *oauth2.Token {
 	if token, err := defaultCacheProvider.GetToken(ctx); err == nil {
 		if token.Expiry.Add(-RefreshTime).Before(time.Now()) {
 			// Generate the client config by fetching the discovery endpoint data from admin.
-			if clientConf, err = GenerateClientConfig(ctx, cmdCtx); err != nil {
+			if clientConf, err = GenerateClientConfig(ctx, authClient); err != nil {
 				return nil
 			}
 			return RefreshTheToken(ctx, clientConf, token)
@@ -61,10 +61,10 @@ func FetchTokenFromCacheOrRefreshIt(ctx context.Context, cmdCtx cmdCore.CommandC
 	return nil
 }
 
-func FetchTokenFromAuthFlow(ctx context.Context, cmdCtx cmdCore.CommandContext) (*oauth2.Token, error) {
+func FetchTokenFromAuthFlow(ctx context.Context, authClient service.AuthServiceClient) (*oauth2.Token, error) {
 	var err error
 	// Generate the client config by fetching the discovery endpoint data from admin.
-	if clientConf, err = GenerateClientConfig(ctx, cmdCtx); err != nil {
+	if clientConf, err = GenerateClientConfig(ctx, authClient); err != nil {
 		return nil, err
 	}
 	var redirectURL *url.URL
@@ -113,7 +113,6 @@ func FetchTokenFromAuthFlow(ctx context.Context, cmdCtx cmdCore.CommandContext) 
 		if err = defaultCacheProvider.SaveToken(ctx, *token); err != nil {
 			logger.Errorf(ctx, "unable to save the new token due to %v", err)
 		}
-		fmt.Printf("\n"+token.AccessToken+"\n")
 		return token, nil
 	}
 }

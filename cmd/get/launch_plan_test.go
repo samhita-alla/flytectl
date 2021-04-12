@@ -23,7 +23,7 @@ var (
 func getLaunchPlanSetup() {
 	ctx = testutils.Ctx
 	cmdCtx = testutils.CmdCtx
-	mockClient = testutils.MockClient
+	mockClient = testutils.MockAdminClient
 	argsLp = []string{"launchplan1"}
 	parameterMap := map[string]*core.Parameter{
 		"numbers": {

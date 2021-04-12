@@ -81,6 +81,7 @@ func updateProjectsFunc(ctx context.Context, args []string, cmdCtx cmdCore.Comma
 	archiveProject := projectConfig.ArchiveProject
 	activateProject := projectConfig.ActivateProject
 	if activateProject == archiveProject {
+		fmt.Print(errInvalidUpdate)
 		return fmt.Errorf(errInvalidUpdate)
 	}
 	projectState := admin.Project_ACTIVE

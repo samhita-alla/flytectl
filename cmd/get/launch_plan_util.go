@@ -65,7 +65,7 @@ func FetchAllVerOfLP(ctx context.Context, lpName string, project string, domain 
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(ctx, cmdCtx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func FetchLPVersion(ctx context.Context, name string, version string, project st
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(ctx, cmdCtx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	if err != nil {
 		return nil, err
 	}

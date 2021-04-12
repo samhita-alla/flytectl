@@ -21,15 +21,16 @@ const domainValue = "dummyDomain"
 const output = "json"
 
 var (
-	reader        *os.File
-	writer        *os.File
-	Err           error
-	Ctx           context.Context
-	MockClient    *mocks.AdminServiceClient
-	mockOutStream io.Writer
-	CmdCtx        cmdCore.CommandContext
-	stdOut        *os.File
-	stderr        *os.File
+	reader          *os.File
+	writer          *os.File
+	Err             error
+	Ctx             context.Context
+	MockAdminClient *mocks.AdminServiceClient
+	MockAuthClient  *mocks.AuthServiceClient
+	mockOutStream   io.Writer
+	CmdCtx          cmdCore.CommandContext
+	stdOut          *os.File
+	stderr          *os.File
 )
 
 func Setup() {
@@ -43,9 +44,10 @@ func Setup() {
 	os.Stdout = writer
 	os.Stderr = writer
 	log.SetOutput(writer)
-	MockClient = new(mocks.AdminServiceClient)
+	MockAdminClient = new(mocks.AdminServiceClient)
+	MockAuthClient = new(mocks.AuthServiceClient)
 	mockOutStream = writer
-	CmdCtx = cmdCore.NewCommandContext(MockClient, mockOutStream)
+	CmdCtx = cmdCore.NewCommandContext(MockAdminClient, MockAuthClient, mockOutStream)
 	config.GetConfig().Project = projectValue
 	config.GetConfig().Domain = domainValue
 	config.GetConfig().Output = output
