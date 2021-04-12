@@ -86,7 +86,7 @@ func getExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.Command
 				}, _callOptions...)
 			return err
 		}
-		err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
+		err := auth.Do(ctx, cmdCtx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 		if err != nil {
 			return err
 		}
@@ -105,7 +105,7 @@ func getExecutionFunc(ctx context.Context, args []string, cmdCtx cmdCore.Command
 				}, _callOptions...)
 			return err
 		}
-		err := auth.Do(ctx, grpcAPICallListExecs, callOptions, config.GetConfig().UseAuth)
+		err := auth.Do(ctx, cmdCtx, grpcAPICallListExecs, callOptions, config.GetConfig().UseAuth)
 		if err != nil {
 			return err
 		}

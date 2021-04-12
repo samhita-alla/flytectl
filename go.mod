@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/flyteorg/flyteidl v0.18.15
+	github.com/flyteorg/flyteidl v0.18.33-0.20210412051034-809716b9461b
 	github.com/flyteorg/flytestdlib v0.3.13
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.4.3
@@ -30,4 +30,4 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
-replace github.com/flyteorg/flyteidl => github.com/flyteorg/flyteidl v0.18.33-0.20210409164018-2cf6f0aca46d
+replace github.com/flyteorg/flyteidl => github.com/flyteorg/flyteidl v0.18.33-0.20210412051034-809716b9461b

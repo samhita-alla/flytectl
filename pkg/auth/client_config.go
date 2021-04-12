@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	cmdCore "github.com/flyteorg/flytectl/cmd/core"
 	"github.com/flyteorg/flyteidl/clients/go/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/service"
 	"github.com/flyteorg/flytestdlib/logger"
@@ -49,9 +50,8 @@ func NewAuthClient(ctx context.Context, conn *grpc.ClientConn) service.AuthServi
 }
 
 
-func GenerateClientConfig(ctx context.Context) (*oauth2.Config, error) {
-	authServiceClient := InitializeAuthClient(ctx, *admin.GetConfig(ctx))
-	authServiceClient :=
+func GenerateClientConfig(ctx context.Context, cmdCtx cmdCore.CommandContext) (*oauth2.Config, error) {
+	authServiceClient := cmdCtx.AuthClient()
 	var flyteClientResp *service.FlyteClientResponse
 	var err error
 	if flyteClientResp, err = authServiceClient.FlyteClient(ctx, &service.FlyteClientRequest{}); err != nil {

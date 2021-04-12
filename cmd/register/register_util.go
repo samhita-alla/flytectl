@@ -93,7 +93,7 @@ func register(ctx context.Context, message proto.Message, cmdCtx cmdCore.Command
 			}, _callOptions...)
 			return err
 		}
-		return auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
+		return auth.Do(ctx, cmdCtx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	case *admin.WorkflowSpec:
 		workflowSpec := message.(*admin.WorkflowSpec)
 		var callOptions []grpc.CallOption
@@ -111,7 +111,7 @@ func register(ctx context.Context, message proto.Message, cmdCtx cmdCore.Command
 			}, _callOptions...)
 			return err
 		}
-		return auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
+		return auth.Do(ctx, cmdCtx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	case *admin.TaskSpec:
 		taskSpec := message.(*admin.TaskSpec)
 		var callOptions []grpc.CallOption
@@ -129,7 +129,7 @@ func register(ctx context.Context, message proto.Message, cmdCtx cmdCore.Command
 			}, _callOptions...)
 			return err
 		}
-		return auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
+		return auth.Do(ctx, cmdCtx, grpcAPICall, callOptions, config.GetConfig().UseAuth)
 	default:
 		return fmt.Errorf("Failed registering unknown entity  %v", v)
 	}

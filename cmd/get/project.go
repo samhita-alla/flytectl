@@ -76,7 +76,7 @@ func getProjectsFunc(ctx context.Context, args []string, cmdCtx cmdCore.CommandC
 		return nil
 	}
 	// useAuth will be controlled by a flag.
-	if err := auth.Do(ctx, grpcAPICall, callOptions, config.GetConfig().UseAuth); err != nil {
+	if err := auth.Do(ctx, cmdCtx, grpcAPICall, callOptions, config.GetConfig().UseAuth); err != nil {
 		return err
 	}
 	if len(args) == 1 {

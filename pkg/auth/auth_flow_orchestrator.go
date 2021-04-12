@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	cmdCore "github.com/flyteorg/flytectl/cmd/core"
 	"net/http"
 	"net/url"
 	"time"
@@ -46,11 +47,11 @@ func RefreshTheToken(ctx context.Context, clientConf *oauth2.Config, token *oaut
 }
 
 // Fetch token from cache
-func FetchTokenFromCacheOrRefreshIt(ctx context.Context) *oauth2.Token {
+func FetchTokenFromCacheOrRefreshIt(ctx context.Context, cmdCtx cmdCore.CommandContext) *oauth2.Token {
 	if token, err := defaultCacheProvider.GetToken(ctx); err == nil {
 		if token.Expiry.Add(-RefreshTime).Before(time.Now()) {
 			// Generate the client config by fetching the discovery endpoint data from admin.
-			if clientConf, err = GenerateClientConfig(ctx); err != nil {
+			if clientConf, err = GenerateClientConfig(ctx, cmdCtx); err != nil {
 				return nil
 			}
 			return RefreshTheToken(ctx, clientConf, token)
@@ -60,10 +61,10 @@ func FetchTokenFromCacheOrRefreshIt(ctx context.Context) *oauth2.Token {
 	return nil
 }
 
-func FetchTokenFromAuthFlow(ctx context.Context) (*oauth2.Token, error) {
+func FetchTokenFromAuthFlow(ctx context.Context, cmdCtx cmdCore.CommandContext) (*oauth2.Token, error) {
 	var err error
 	// Generate the client config by fetching the discovery endpoint data from admin.
-	if clientConf, err = GenerateClientConfig(ctx); err != nil {
+	if clientConf, err = GenerateClientConfig(ctx, cmdCtx); err != nil {
 		return nil, err
 	}
 	var redirectURL *url.URL
