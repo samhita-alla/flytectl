@@ -66,7 +66,9 @@ func TestDoWithAuthErrorWithClientAuthDisabled(t *testing.T) {
 	}
 	err := Do(ctx, authClient, grpcAPICallContext, callOptions, useAuth)
 	assert.NotNil(t, err)
-	assert.Equal(t, err, status.New(codes.Unauthenticated, "empty identity").Err())
+	s, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, s, status.New(codes.Unauthenticated, "empty identity"))
 }
 
 func TestDoWithAuthErrorWithClientAuthEnabled(t *testing.T) {
