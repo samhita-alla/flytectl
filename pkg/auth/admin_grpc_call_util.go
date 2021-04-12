@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 
+	"github.com/flyteorg/flytectl/pkg/auth/interfaces"
 	"github.com/flyteorg/flyteidl/clients/go/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/service"
 
@@ -12,6 +13,14 @@ import (
 	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/status"
 )
+
+var (
+	defaultTokenOrchestrator = NewTokenOrchestrator()
+)
+
+func NewTokenOrchestrator() interfaces.FetchTokenOrchestrator {
+	return TokenOrchestrator{}
+}
 
 type AdminGrpcAPICallContext func(ctx context.Context, callOptions []grpc.CallOption) error
 
@@ -33,7 +42,7 @@ func callOptionForToken(ctx context.Context, token *oauth2.Token) grpc.CallOptio
 func updateWithNewToken(ctx context.Context, authClient service.AuthServiceClient, callOptions []grpc.CallOption) ([]grpc.CallOption, error) {
 	var newToken *oauth2.Token
 	var err error
-	if newToken, err = FetchTokenFromAuthFlow(ctx, authClient); err != nil {
+	if newToken, err = defaultTokenOrchestrator.FetchTokenFromAuthFlow(ctx, authClient); err != nil {
 		return nil, err
 	}
 	return append(callOptions, callOptionForToken(ctx, newToken)), nil
@@ -41,7 +50,7 @@ func updateWithNewToken(ctx context.Context, authClient service.AuthServiceClien
 
 func updateWithCachedOrRefreshedToken(ctx context.Context, authClient service.AuthServiceClient, callOptions []grpc.CallOption) []grpc.CallOption {
 	var cachedOrRefreshedToken *oauth2.Token
-	if cachedOrRefreshedToken = FetchTokenFromCacheOrRefreshIt(ctx, authClient); cachedOrRefreshedToken == nil {
+	if cachedOrRefreshedToken = defaultTokenOrchestrator.FetchTokenFromCacheOrRefreshIt(ctx, authClient); cachedOrRefreshedToken == nil {
 		return callOptions
 	}
 	return append(callOptions, callOptionForToken(ctx, cachedOrRefreshedToken))

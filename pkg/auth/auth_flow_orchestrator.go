@@ -20,7 +20,10 @@ const (
 	RefreshTime = 5 * time.Minute
 )
 
-func RefreshTheToken(ctx context.Context, clientConf *oauth2.Config, token *oauth2.Token) *oauth2.Token {
+type TokenOrchestrator struct {
+}
+
+func (f TokenOrchestrator) RefreshTheToken(ctx context.Context, clientConf *oauth2.Config, token *oauth2.Token) *oauth2.Token {
 	// ClientSecret is empty here. Basic auth is only needed to refresh the token.
 	client := newBasicClient(clientConf.ClientID, clientConf.ClientSecret)
 	payload := url.Values{
@@ -46,22 +49,22 @@ func RefreshTheToken(ctx context.Context, clientConf *oauth2.Config, token *oaut
 	return &refreshedToken
 }
 
-// Fetch token from cache
-func FetchTokenFromCacheOrRefreshIt(ctx context.Context, authClient service.AuthServiceClient) *oauth2.Token {
+// FetchTokenFromCacheOrRefreshIt Fetch token from cache or refresh it
+func (f TokenOrchestrator) FetchTokenFromCacheOrRefreshIt(ctx context.Context, authClient service.AuthServiceClient) *oauth2.Token {
 	if token, err := defaultCacheProvider.GetToken(ctx); err == nil {
 		if token.Expiry.Add(-RefreshTime).Before(time.Now()) {
 			// Generate the client config by fetching the discovery endpoint data from admin.
 			if clientConf, err = GenerateClientConfig(ctx, authClient); err != nil {
 				return nil
 			}
-			return RefreshTheToken(ctx, clientConf, token)
+			return f.RefreshTheToken(ctx, clientConf, token)
 		}
 		return token
 	}
 	return nil
 }
 
-func FetchTokenFromAuthFlow(ctx context.Context, authClient service.AuthServiceClient) (*oauth2.Token, error) {
+func (f TokenOrchestrator) FetchTokenFromAuthFlow(ctx context.Context, authClient service.AuthServiceClient) (*oauth2.Token, error) {
 	var err error
 	// Generate the client config by fetching the discovery endpoint data from admin.
 	if clientConf, err = GenerateClientConfig(ctx, authClient); err != nil {
