@@ -24,6 +24,10 @@ type TokenCacheProvider struct {
 func (t TokenCacheProvider) SaveToken(ctx context.Context, token oauth2.Token) error {
 	var tokenBytes []byte
 	var err error
+	if token.AccessToken == "" {
+		logger.Errorf(ctx, "dont save empty token with expiration %v", token.Expiry)
+		return err
+	}
 	if tokenBytes, err = json.Marshal(token); err != nil {
 		logger.Errorf(ctx, "unable to marshal token to save in cache due to %v", err)
 		return err

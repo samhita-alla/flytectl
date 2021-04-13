@@ -17,10 +17,28 @@ import (
 
 const (
 	Timeout     = 10 * time.Second
-	RefreshTime = 5 * time.Minute
+	RefreshTime = 120 * time.Minute
 )
 
 type TokenOrchestrator struct {
+}
+
+// This is a copy of oauth2.internal.tokenJSON as its not accesible outside.
+// This class is required since the json data returned by admin is in this internal format and requires to be converted to
+// the oauth2.Token format
+
+type tokenJSON struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+}
+
+func (e *tokenJSON) expiry() (t time.Time) {
+	if v := e.ExpiresIn; v != 0 {
+		return time.Now().Add(time.Duration(v) * time.Second)
+	}
+	return
 }
 
 func (f TokenOrchestrator) RefreshTheToken(ctx context.Context, clientConf *oauth2.Config, token *oauth2.Token) *oauth2.Token {
@@ -36,16 +54,23 @@ func (f TokenOrchestrator) RefreshTheToken(ctx context.Context, clientConf *oaut
 		logger.Errorf(ctx, "could not refresh token with expiry at %v due to %v", token.Expiry, err)
 		return nil
 	}
-
-	var refreshedToken oauth2.Token
-	if err = json.Unmarshal([]byte(body), &refreshedToken); err != nil {
+	var internalToken tokenJSON
+	if err = json.Unmarshal([]byte(body), &internalToken); err != nil {
 		return nil
+	}
+	refreshedToken := oauth2.Token{
+		AccessToken:  internalToken.AccessToken,
+		TokenType:    internalToken.TokenType,
+		RefreshToken: internalToken.RefreshToken,
+		Expiry:       internalToken.expiry(),
 	}
 	logger.Debugf(ctx, "got a response from the refresh grant for old expiry %v with new expiry %v",
 		token.Expiry, refreshedToken.Expiry)
+
 	if err = defaultCacheProvider.SaveToken(ctx, refreshedToken); err != nil {
 		logger.Errorf(ctx, "unable to save the refreshed token due to %v", err)
 	}
+	fmt.Println(refreshedToken.AccessToken)
 	return &refreshedToken
 }
 
