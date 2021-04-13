@@ -15,7 +15,6 @@ import (
 
 const projectValue = "dummyProject"
 const domainValue = "dummyDomain"
-const output = "json"
 const executionNameValue = "e124"
 const launchPlanNameValue = "lp_name"
 const launchPlanVersionValue = "lp_version"

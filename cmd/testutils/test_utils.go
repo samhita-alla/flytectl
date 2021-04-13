@@ -11,6 +11,7 @@ import (
 
 	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
+	"github.com/flyteorg/flyteidl/clients/go/admin"
 	"github.com/flyteorg/flyteidl/clients/go/admin/mocks"
 
 	"github.com/stretchr/testify/assert"
@@ -46,8 +47,12 @@ func Setup() {
 	log.SetOutput(writer)
 	MockAdminClient = new(mocks.AdminServiceClient)
 	MockAuthClient = new(mocks.AuthServiceClient)
+	clientSet := &admin.Clientset{
+		AdminServiceClient: MockAdminClient,
+		AuthServiceClient:  MockAuthClient,
+	}
 	mockOutStream = writer
-	CmdCtx = cmdCore.NewCommandContext(MockAdminClient, MockAuthClient, mockOutStream)
+	CmdCtx = cmdCore.NewCommandContext(clientSet, mockOutStream)
 	config.GetConfig().Project = projectValue
 	config.GetConfig().Domain = domainValue
 	config.GetConfig().Output = output

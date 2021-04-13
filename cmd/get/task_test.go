@@ -1,6 +1,7 @@
 package get
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -16,6 +18,7 @@ var (
 	resourceListRequestTask *admin.ResourceListRequest
 	objectGetRequestTask    *admin.ObjectGetRequest
 	namedIDRequestTask      *admin.NamedEntityIdentifierListRequest
+	namedIdentifierListTask *admin.NamedEntityIdentifierList
 	taskListResponse        *admin.TaskList
 	argsTask                []string
 )
@@ -128,17 +131,35 @@ func getTaskSetup() {
 		Name:    "task2",
 	}
 	taskEntities = append(taskEntities, idTask1, idTask2)
-	namedIdentifierListTask := &admin.NamedEntityIdentifierList{
+	namedIdentifierListTask = &admin.NamedEntityIdentifierList{
 		Entities: taskEntities,
 	}
 
 	mockClient.OnListTasksMatch(ctx, resourceListRequestTask).Return(taskListResponse, nil)
 	mockClient.OnGetTaskMatch(ctx, objectGetRequestTask).Return(task2, nil)
-	mockClient.OnListTaskIdsMatch(ctx, namedIDRequestTask).Return(namedIdentifierListTask, nil)
 
 	taskConfig.Latest = false
 	taskConfig.ExecFile = ""
 	taskConfig.Version = ""
+}
+
+func TestListTasksFunc(t *testing.T) {
+	setup()
+	getTaskSetup()
+	mockClient.OnListTaskIdsMatch(ctx, mock.Anything).Return(namedIdentifierListTask, nil)
+	err = getTaskFunc(ctx, args, cmdCtx)
+	assert.Nil(t, err)
+	mockClient.AssertCalled(t, "ListTaskIds", ctx, mock.Anything)
+}
+
+func TestListTasksFuncWithError(t *testing.T) {
+	setup()
+	getTaskSetup()
+	mockClient.OnListTaskIdsMatch(ctx, mock.Anything).Return(nil, errors.New("tasks NotFound"))
+	err = getTaskFunc(ctx, args, cmdCtx)
+	assert.NotNil(t, err)
+	assert.Equal(t, err, errors.New("tasks NotFound"))
+	mockClient.AssertCalled(t, "ListTaskIds", ctx, mock.Anything)
 }
 
 func TestGetTaskFunc(t *testing.T) {
@@ -305,10 +326,11 @@ func TestGetTaskWithVersion(t *testing.T) {
 func TestGetTasks(t *testing.T) {
 	setup()
 	getTaskSetup()
+	mockClient.OnListTaskIdsMatch(ctx, mock.Anything).Return(namedIdentifierListTask, nil)
 	argsTask = []string{}
 	err = getTaskFunc(ctx, argsTask, cmdCtx)
 	assert.Nil(t, err)
-	mockClient.AssertCalled(t, "ListTaskIds", ctx, namedIDRequest)
+	mockClient.AssertCalled(t, "ListTaskIds", ctx, mock.Anything)
 	tearDownAndVerify(t, `[
 	{
 		"project": "dummyProject",

@@ -2,12 +2,14 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/flyteorg/flytectl/cmd/testutils"
 	"github.com/flyteorg/flytectl/pkg/auth/interfaces/mocks"
+	"github.com/flyteorg/flyteidl/clients/go/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/service"
 
 	"github.com/stretchr/testify/assert"
@@ -79,6 +81,41 @@ func TestDoWithAuthErrorWithClientAuthEnabled(t *testing.T) {
 		return status.New(codes.Unauthenticated, "empty identity").Err()
 	}
 
+	token := &oauth2.Token{
+		AccessToken: "fakeAccessToken",
+		Expiry:      time.Now().Add(time.Minute * 30),
+	}
+	mockTokenOrchestrator.OnFetchTokenFromAuthFlowMatch(mock.Anything, mock.Anything, mock.Anything).Return(token, nil)
+	mockTokenOrchestrator.OnFetchTokenFromCacheOrRefreshItMatch(mock.Anything, mock.Anything).Return(token)
+	mockTokenOrchestrator.OnRefreshTheTokenMatch(mock.Anything, mock.Anything, mock.Anything).Return(token)
+	err := Do(ctx, authClient, grpcAPICallContext, callOptions, useAuth)
+	assert.NotNil(t, err)
+	assert.Equal(t, err, status.New(codes.Unauthenticated, "empty identity").Err())
+}
+
+func TestDoWithAuthErrorWithClientAuthEnabledAndError(t *testing.T) {
+	setup()
+	GrpcCallUtilSetup()
+	useAuth = true
+	grpcAPICallContext = func(ctx context.Context, callOptions []grpc.CallOption) error {
+		return status.New(codes.Unauthenticated, "empty identity").Err()
+	}
+	mockTokenOrchestrator.OnFetchTokenFromAuthFlowMatch(mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("failed to fetch token using auth flow"))
+	mockTokenOrchestrator.OnFetchTokenFromCacheOrRefreshItMatch(mock.Anything, mock.Anything).Return(nil)
+	mockTokenOrchestrator.OnRefreshTheTokenMatch(mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	err := Do(ctx, authClient, grpcAPICallContext, callOptions, useAuth)
+	assert.NotNil(t, err)
+	assert.Equal(t, err, errors.New("failed to fetch token using auth flow"))
+}
+
+func TestDoWithAuthErrorWithClientAuthEnabledInsecureCreds(t *testing.T) {
+	setup()
+	GrpcCallUtilSetup()
+	useAuth = true
+	admin.GetConfig(ctx).UseInsecureConnection = true
+	grpcAPICallContext = func(ctx context.Context, callOptions []grpc.CallOption) error {
+		return status.New(codes.Unauthenticated, "empty identity").Err()
+	}
 	token := &oauth2.Token{
 		AccessToken: "fakeAccessToken",
 		Expiry:      time.Now().Add(time.Minute * 30),

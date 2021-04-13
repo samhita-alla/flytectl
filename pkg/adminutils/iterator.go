@@ -3,7 +3,11 @@ package adminutils
 import (
 	"context"
 
+	"github.com/flyteorg/flytectl/cmd/config"
+	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
+	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/service"
+
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 )
@@ -18,7 +22,7 @@ type ListRequest struct {
 	Filters string
 }
 
-func IterateThroughAllNamedEntities(ctx context.Context, lister NamedEntityIDLister, visitor NamedEntityVisitor, req ListRequest, opts ...grpc.CallOption) error {
+func IterateThroughAllNamedEntities(ctx context.Context, authClient service.AuthServiceClient, lister NamedEntityIDLister, visitor NamedEntityVisitor, req ListRequest, opts ...grpc.CallOption) error {
 	adminReq := &admin.NamedEntityIdentifierListRequest{
 		Project: req.Project,
 		Domain:  req.Domain,
@@ -32,8 +36,18 @@ func IterateThroughAllNamedEntities(ctx context.Context, lister NamedEntityIDLis
 
 	i := 0
 	for i < GetConfig().MaxRecords {
-		res, err := lister(ctx, adminReq, opts...)
-		if err != nil {
+		var res *admin.NamedEntityIdentifierList
+		var callOptions []grpc.CallOption
+		grpcAPICall := func(_ctx context.Context, _callOptions []grpc.CallOption) error {
+			var err error
+			res, err = lister(ctx, adminReq, _callOptions...)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		// useAuth will be controlled by a flag.
+		if err := auth.Do(ctx, authClient, grpcAPICall, callOptions, config.GetConfig().UseAuth); err != nil {
 			return err
 		}
 		if len(res.Entities) != 0 {
@@ -50,9 +64,9 @@ func IterateThroughAllNamedEntities(ctx context.Context, lister NamedEntityIDLis
 	return nil
 }
 
-func GetAllNamedEntities(ctx context.Context, lister NamedEntityIDLister, req ListRequest, opts ...grpc.CallOption) ([]*admin.NamedEntityIdentifier, error) {
+func GetAllNamedEntities(ctx context.Context, authClient service.AuthServiceClient, lister NamedEntityIDLister, req ListRequest, opts ...grpc.CallOption) ([]*admin.NamedEntityIdentifier, error) {
 	var allEntities []*admin.NamedEntityIdentifier
-	err := IterateThroughAllNamedEntities(ctx, lister, func(entities []*admin.NamedEntityIdentifier) error {
+	err := IterateThroughAllNamedEntities(ctx, authClient, lister, func(entities []*admin.NamedEntityIdentifier) error {
 		allEntities = append(allEntities, entities...)
 		return nil
 	}, req)

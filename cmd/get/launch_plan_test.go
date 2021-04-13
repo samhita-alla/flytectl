@@ -1,6 +1,7 @@
 package get
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/core"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -16,6 +18,7 @@ var (
 	resourceListRequest    *admin.ResourceListRequest
 	objectGetRequest       *admin.ObjectGetRequest
 	namedIDRequest         *admin.NamedEntityIdentifierListRequest
+	namedIdentifierList    *admin.NamedEntityIdentifierList
 	launchPlanListResponse *admin.LaunchPlanList
 	argsLp                 []string
 )
@@ -159,17 +162,35 @@ func getLaunchPlanSetup() {
 		Name:    "launchplan2",
 	}
 	entities = append(entities, id1, id2)
-	namedIdentifierList := &admin.NamedEntityIdentifierList{
+	namedIdentifierList = &admin.NamedEntityIdentifierList{
 		Entities: entities,
 	}
 
 	mockClient.OnListLaunchPlansMatch(ctx, resourceListRequest).Return(launchPlanListResponse, nil)
 	mockClient.OnGetLaunchPlanMatch(ctx, objectGetRequest).Return(launchPlan2, nil)
-	mockClient.OnListLaunchPlanIdsMatch(ctx, namedIDRequest).Return(namedIdentifierList, nil)
 
 	launchPlanConfig.Latest = false
 	launchPlanConfig.Version = ""
 	launchPlanConfig.ExecFile = ""
+}
+
+func TestListLaunchPlansFunc(t *testing.T) {
+	setup()
+	getLaunchPlanSetup()
+	mockClient.OnListLaunchPlanIdsMatch(ctx, mock.Anything).Return(namedIdentifierList, nil)
+	err = getLaunchPlanFunc(ctx, args, cmdCtx)
+	assert.Nil(t, err)
+	mockClient.AssertCalled(t, "ListLaunchPlanIds", ctx, mock.Anything)
+}
+
+func TestListLaunchPlansFuncWithError(t *testing.T) {
+	setup()
+	getLaunchPlanSetup()
+	mockClient.OnListLaunchPlanIdsMatch(ctx, mock.Anything).Return(nil, errors.New("launchplans NotFound"))
+	err = getLaunchPlanFunc(ctx, args, cmdCtx)
+	assert.NotNil(t, err)
+	assert.Equal(t, err, errors.New("launchplans NotFound"))
+	mockClient.AssertCalled(t, "ListLaunchPlanIds", ctx, mock.Anything)
 }
 
 func TestGetLaunchPlanFunc(t *testing.T) {
@@ -519,6 +540,7 @@ func TestGetLaunchPlanWithVersion(t *testing.T) {
 func TestGetLaunchPlans(t *testing.T) {
 	setup()
 	getLaunchPlanSetup()
+	mockClient.OnListLaunchPlanIdsMatch(ctx, mock.Anything).Return(namedIdentifierList, nil)
 	argsLp = []string{}
 	err = getLaunchPlanFunc(ctx, argsLp, cmdCtx)
 	assert.Nil(t, err)

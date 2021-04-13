@@ -1,16 +1,16 @@
 package cmdcore
 
 import (
-	"github.com/flyteorg/flyteidl/clients/go/admin"
 	"io"
 
+	"github.com/flyteorg/flyteidl/clients/go/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/service"
 )
 
 type CommandContext struct {
-	clientSet   *admin.Clientset
-	in          io.Reader
-	out         io.Writer
+	clientSet *admin.Clientset
+	in        io.Reader
+	out       io.Writer
 }
 
 func NewCommandContext(clientSet *admin.Clientset, out io.Writer) CommandContext {

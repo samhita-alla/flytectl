@@ -33,7 +33,7 @@ func callbackHandler(c oauth2.Config) func(rw http.ResponseWriter, req *http.Req
 		}
 		if req.URL.Query().Get("state") != stateString {
 			errorChannel <- fmt.Errorf("possibly a csrf attack")
-			_, _ = rw.Write([]byte(fmt.Sprintln(`<p>Possibly a CSRF attack.</p>`)))
+			_, _ = rw.Write([]byte(fmt.Sprintln(`<p>Sorry we can't serve your request'.</p>`)))
 			return
 		}
 		// We'll check whether we sent a code+PKCE request, and if so, send the code_verifier along when requesting the access token.
