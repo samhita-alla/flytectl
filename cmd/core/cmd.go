@@ -57,10 +57,10 @@ func generateCommandFunc(cmdEntry CommandEntry) func(cmd *cobra.Command, args []
 			return err
 		}
 
-		adminClient, authClient, err := admin.InitializeClientsFromConfig(ctx)
+		clientSet, err := admin.InitializeClientsFromConfig(ctx)
 		if err != nil {
 			return err
 		}
-		return cmdEntry.CmdFunc(ctx, args, NewCommandContext(adminClient, authClient, cmd.OutOrStdout()))
+		return cmdEntry.CmdFunc(ctx, args, NewCommandContext(clientSet, cmd.OutOrStdout()))
 	}
 }

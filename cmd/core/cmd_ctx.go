@@ -1,28 +1,34 @@
 package cmdcore
 
 import (
+	"github.com/flyteorg/flyteidl/clients/go/admin"
 	"io"
 
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/service"
 )
 
 type CommandContext struct {
-	adminClient service.AdminServiceClient
-	authClient  service.AuthServiceClient
+	clientSet   *admin.Clientset
 	in          io.Reader
 	out         io.Writer
 }
 
-func NewCommandContext(adminClient service.AdminServiceClient, authClient service.AuthServiceClient, out io.Writer) CommandContext {
-	return CommandContext{adminClient: adminClient, authClient: authClient, out: out}
+func NewCommandContext(clientSet *admin.Clientset, out io.Writer) CommandContext {
+	return CommandContext{clientSet: clientSet, out: out}
 }
 
 func (c CommandContext) AdminClient() service.AdminServiceClient {
-	return c.adminClient
+	if c.clientSet == nil {
+		return nil
+	}
+	return c.clientSet.AdminClient()
 }
 
 func (c CommandContext) AuthClient() service.AuthServiceClient {
-	return c.authClient
+	if c.clientSet == nil {
+		return nil
+	}
+	return c.clientSet.AuthClient()
 }
 
 func (c CommandContext) OutputPipe() io.Writer {

@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/flyteorg/flyteidl v0.18.33-0.20210412103803-ecd39b8aadeb
+	github.com/flyteorg/flyteidl v0.18.33-0.20210413034659-c1fd0abdfda8
 	github.com/flyteorg/flytestdlib v0.3.13
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.4.3
