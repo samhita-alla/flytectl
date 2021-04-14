@@ -45,7 +45,7 @@ func GrpcCallUtilSetup() {
 func TestDo(t *testing.T) {
 	setup()
 	GrpcCallUtilSetup()
-	err := Do(ctx, authClient, grpcAPICallContext, callOptions, useAuth)
+	err := Do(ctx, authClient, grpcAPICallContext, callOptions)
 	assert.Nil(t, err)
 }
 
@@ -55,7 +55,7 @@ func TestDoWithNonAuthError(t *testing.T) {
 	grpcAPICallContext = func(ctx context.Context, callOptions []grpc.CallOption) error {
 		return fmt.Errorf("nonAuthError")
 	}
-	err := Do(ctx, authClient, grpcAPICallContext, callOptions, useAuth)
+	err := Do(ctx, authClient, grpcAPICallContext, callOptions)
 	assert.NotNil(t, err)
 	assert.Equal(t, err, fmt.Errorf("nonAuthError"))
 }
@@ -66,7 +66,7 @@ func TestDoWithAuthErrorWithClientAuthDisabled(t *testing.T) {
 	grpcAPICallContext = func(ctx context.Context, callOptions []grpc.CallOption) error {
 		return status.New(codes.Unauthenticated, "empty identity").Err()
 	}
-	err := Do(ctx, authClient, grpcAPICallContext, callOptions, useAuth)
+	err := Do(ctx, authClient, grpcAPICallContext, callOptions)
 	assert.NotNil(t, err)
 	s, ok := status.FromError(err)
 	assert.True(t, ok)
@@ -76,7 +76,7 @@ func TestDoWithAuthErrorWithClientAuthDisabled(t *testing.T) {
 func TestDoWithAuthErrorWithClientAuthEnabled(t *testing.T) {
 	setup()
 	GrpcCallUtilSetup()
-	useAuth = true
+	admin.GetConfig(ctx).UseAuth = true
 	grpcAPICallContext = func(ctx context.Context, callOptions []grpc.CallOption) error {
 		return status.New(codes.Unauthenticated, "empty identity").Err()
 	}
@@ -88,7 +88,7 @@ func TestDoWithAuthErrorWithClientAuthEnabled(t *testing.T) {
 	mockTokenOrchestrator.OnFetchTokenFromAuthFlowMatch(mock.Anything, mock.Anything, mock.Anything).Return(token, nil)
 	mockTokenOrchestrator.OnFetchTokenFromCacheOrRefreshItMatch(mock.Anything, mock.Anything).Return(token)
 	mockTokenOrchestrator.OnRefreshTheTokenMatch(mock.Anything, mock.Anything, mock.Anything).Return(token)
-	err := Do(ctx, authClient, grpcAPICallContext, callOptions, useAuth)
+	err := Do(ctx, authClient, grpcAPICallContext, callOptions)
 	assert.NotNil(t, err)
 	assert.Equal(t, err, status.New(codes.Unauthenticated, "empty identity").Err())
 }
@@ -96,14 +96,15 @@ func TestDoWithAuthErrorWithClientAuthEnabled(t *testing.T) {
 func TestDoWithAuthErrorWithClientAuthEnabledAndError(t *testing.T) {
 	setup()
 	GrpcCallUtilSetup()
-	useAuth = true
+
+	admin.GetConfig(ctx).UseAuth = true
 	grpcAPICallContext = func(ctx context.Context, callOptions []grpc.CallOption) error {
 		return status.New(codes.Unauthenticated, "empty identity").Err()
 	}
 	mockTokenOrchestrator.OnFetchTokenFromAuthFlowMatch(mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("failed to fetch token using auth flow"))
 	mockTokenOrchestrator.OnFetchTokenFromCacheOrRefreshItMatch(mock.Anything, mock.Anything).Return(nil)
 	mockTokenOrchestrator.OnRefreshTheTokenMatch(mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	err := Do(ctx, authClient, grpcAPICallContext, callOptions, useAuth)
+	err := Do(ctx, authClient, grpcAPICallContext, callOptions)
 	assert.NotNil(t, err)
 	assert.Equal(t, err, errors.New("failed to fetch token using auth flow"))
 }
@@ -111,7 +112,7 @@ func TestDoWithAuthErrorWithClientAuthEnabledAndError(t *testing.T) {
 func TestDoWithAuthErrorWithClientAuthEnabledInsecureCreds(t *testing.T) {
 	setup()
 	GrpcCallUtilSetup()
-	useAuth = true
+	admin.GetConfig(ctx).UseAuth = true
 	admin.GetConfig(ctx).UseInsecureConnection = true
 	grpcAPICallContext = func(ctx context.Context, callOptions []grpc.CallOption) error {
 		return status.New(codes.Unauthenticated, "empty identity").Err()
@@ -123,7 +124,7 @@ func TestDoWithAuthErrorWithClientAuthEnabledInsecureCreds(t *testing.T) {
 	mockTokenOrchestrator.OnFetchTokenFromAuthFlowMatch(mock.Anything, mock.Anything, mock.Anything).Return(token, nil)
 	mockTokenOrchestrator.OnFetchTokenFromCacheOrRefreshItMatch(mock.Anything, mock.Anything).Return(token)
 	mockTokenOrchestrator.OnRefreshTheTokenMatch(mock.Anything, mock.Anything, mock.Anything).Return(token)
-	err := Do(ctx, authClient, grpcAPICallContext, callOptions, useAuth)
+	err := Do(ctx, authClient, grpcAPICallContext, callOptions)
 	assert.NotNil(t, err)
 	assert.Equal(t, err, status.New(codes.Unauthenticated, "empty identity").Err())
 }

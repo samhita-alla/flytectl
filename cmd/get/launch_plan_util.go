@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
 	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
@@ -65,7 +64,7 @@ func FetchAllVerOfLP(ctx context.Context, lpName string, project string, domain 
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +101,7 @@ func FetchLPVersion(ctx context.Context, name string, version string, project st
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions)
 	if err != nil {
 		return nil, err
 	}

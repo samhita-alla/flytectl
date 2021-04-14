@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	Timeout     = 10 * time.Second
-	RefreshTime = 120 * time.Minute
+	Timeout     = 15 * time.Second
+	RefreshTime = 5 * time.Minute
 )
 
 type TokenOrchestrator struct {
@@ -70,7 +70,6 @@ func (f TokenOrchestrator) RefreshTheToken(ctx context.Context, clientConf *oaut
 	if err = defaultCacheProvider.SaveToken(ctx, refreshedToken); err != nil {
 		logger.Errorf(ctx, "unable to save the refreshed token due to %v", err)
 	}
-	fmt.Println(refreshedToken.AccessToken)
 	return &refreshedToken
 }
 

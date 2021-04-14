@@ -56,8 +56,9 @@ func updateWithCachedOrRefreshedToken(ctx context.Context, authClient service.Au
 	return append(callOptions, callOptionForToken(ctx, cachedOrRefreshedToken))
 }
 
-func Do(ctx context.Context, authClient service.AuthServiceClient, grpcAPICallContext AdminGrpcAPICallContext, callOptions []grpc.CallOption, useAuth bool) error {
+func Do(ctx context.Context, authClient service.AuthServiceClient, grpcAPICallContext AdminGrpcAPICallContext, callOptions []grpc.CallOption) error {
 	// Fetch from the cache only when usAuth is enabled.
+	useAuth := admin.GetConfig(ctx).UseAuth
 	if useAuth {
 		callOptions = updateWithCachedOrRefreshedToken(ctx, authClient, callOptions)
 	}

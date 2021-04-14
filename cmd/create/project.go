@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/flyteorg/flytectl/cmd/config"
 	cmdCore "github.com/flyteorg/flytectl/cmd/core"
 	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
@@ -96,7 +95,7 @@ func createProjectsCommand(ctx context.Context, args []string, cmdCtx cmdCore.Co
 		}, _callOptions...)
 		return err
 	}
-	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions, config.GetConfig().UseAuth)
+	err := auth.Do(ctx, cmdCtx.AuthClient(), grpcAPICall, callOptions)
 	if err != nil {
 		return err
 	}

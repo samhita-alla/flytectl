@@ -3,7 +3,6 @@ package adminutils
 import (
 	"context"
 
-	"github.com/flyteorg/flytectl/cmd/config"
 	"github.com/flyteorg/flytectl/pkg/auth"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/admin"
 	"github.com/flyteorg/flyteidl/gen/pb-go/flyteidl/service"
@@ -47,7 +46,7 @@ func IterateThroughAllNamedEntities(ctx context.Context, authClient service.Auth
 			return nil
 		}
 		// useAuth will be controlled by a flag.
-		if err := auth.Do(ctx, authClient, grpcAPICall, callOptions, config.GetConfig().UseAuth); err != nil {
+		if err := auth.Do(ctx, authClient, grpcAPICall, callOptions); err != nil {
 			return err
 		}
 		if len(res.Entities) != 0 {
